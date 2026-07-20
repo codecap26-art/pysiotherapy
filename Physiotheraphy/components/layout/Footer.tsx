@@ -16,7 +16,7 @@ const CONNECT = [
   { href: '#', label: 'Instagram', icon: '📷' },
   { href: 'mailto:contact@healingmotion.fit', label: 'Email', icon: '✉️' },
 ];
-
+ 
 export default function Footer() {
   return (
     <footer className="bg-[#0D1421] text-white">

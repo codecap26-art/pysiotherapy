@@ -109,3 +109,49 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+/* ── FilterBar Utilities ──────────────────────────────────────────────────── */
+
+/* Hide scrollbar on chip carousel while keeping scroll behaviour */
+.chips-no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.chips-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Chip ripple micro-interaction */
+.filter-chip { isolation: isolate; }
+.filter-chip .chip-ripple {
+  border-radius: inherit;
+  transform: scale(0);
+  opacity: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%);
+  transition: transform 0.45s ease-out, opacity 0.45s ease-out;
+}
+.filter-chip:active .chip-ripple {
+  transform: scale(2.5);
+  opacity: 1;
+  transition: none;
+}
+
+/* Search field animated placeholder fade */
+.filter-search-input::placeholder {
+  transition: opacity 0.2s ease;
+}
+.filter-search-input:focus::placeholder {
+  opacity: 0.4;
+}
+
+/* Dropdown fade-in */
+@keyframes dropdown-in {
+  from { opacity: 0; transform: scaleY(0.9) translateY(-4px); }
+  to   { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+
+/* Load More dots bounce */
+@keyframes bounce {
+  from { transform: translateY(0);    opacity: 0.4; }
+  to   { transform: translateY(-6px); opacity: 1;   }
+}
