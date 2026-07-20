@@ -1,18 +1,30 @@
 'use client';
 
-import type { Metadata } from 'next';
 import Link from 'next/link';
-import { useState } from 'react';
-import { User, Phone, ChevronDown, Sun, Sunset, Headphones, PhoneCall, Check } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { User, Phone, ChevronDown, Sun, Sunset, Headphones, PhoneCall, Check, UserCircle2, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FadeUp } from '@/lib/animations';
 import { Button } from '@/components/ui/Button';
 
 const STEPS = ['Details', 'Availability', 'Confirm'];
 
-export default function BookAppointmentPage() {
+function BookAppointmentForm() {
+  const searchParams = useSearchParams();
+  const doctorId = searchParams.get('doctorId');
+  const doctorName = searchParams.get('doctorName');
+  const doctorDesignation = searchParams.get('doctorDesignation');
+
   const [timeWindow, setTimeWindow] = useState<'morning' | 'afternoon'>('afternoon');
   const [isLoading, setIsLoading] = useState(false);
+  const [preferredDoctor, setPreferredDoctor] = useState(doctorName || '');
+
+  useEffect(() => {
+    if (doctorName) {
+      setPreferredDoctor(decodeURIComponent(doctorName));
+    }
+  }, [doctorName]);
 
   const handleSubmit = () => {
     setIsLoading(true);
@@ -57,6 +69,31 @@ export default function BookAppointmentPage() {
           </div>
         </FadeUp>
 
+        {/* Pre-filled doctor banner */}
+        {doctorName && (
+          <FadeUp delay={0.05}>
+            <div className="mb-6 bg-gradient-to-r from-[#EFF5FF] to-[#ECFEFF] border border-[#BFDBFE] rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+              <div className="w-10 h-10 rounded-full bg-[#1E6FFF]/10 flex items-center justify-center shrink-0">
+                <UserCircle2 className="w-5 h-5 text-[#1E6FFF]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-[#8896A8] uppercase tracking-wider mb-0.5">Booking with</p>
+                <p className="text-base font-bold text-[#0D1421] truncate">{decodeURIComponent(doctorName)}</p>
+                {doctorDesignation && (
+                  <p className="text-xs text-[#4A5568] truncate">{decodeURIComponent(doctorDesignation)}</p>
+                )}
+              </div>
+              <Link
+                href="/specialists"
+                className="p-1.5 rounded-full text-[#8896A8] hover:text-[#0D1421] hover:bg-white transition-colors"
+                title="Change doctor"
+              >
+                <X className="w-4 h-4" />
+              </Link>
+            </div>
+          </FadeUp>
+        )}
+
         {/* Form card */}
         <FadeUp delay={0.1}>
           <div className="bg-white rounded-3xl border border-[#E8ECF4] shadow-[0_16px_64px_-12px_rgba(0,0,0,0.08)] p-8 md:p-10 mb-6">
@@ -92,6 +129,28 @@ export default function BookAppointmentPage() {
                     className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm placeholder:text-[#CDD6E8] focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all"
                   />
                 </div>
+              </div>
+
+              {/* Preferred Doctor (pre-filled from query param) */}
+              <div>
+                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-2">
+                  Preferred Specialist
+                </label>
+                <div className="relative">
+                  <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8]" />
+                  <input
+                    type="text"
+                    placeholder="No preference"
+                    value={preferredDoctor}
+                    onChange={(e) => setPreferredDoctor(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm placeholder:text-[#CDD6E8] focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all"
+                  />
+                </div>
+                {doctorName && (
+                  <p className="text-xs text-[#10B981] font-semibold mt-1.5 flex items-center gap-1.5">
+                    <Check className="w-3 h-3" /> Pre-filled from your specialist selection
+                  </p>
+                )}
               </div>
 
               {/* Reason */}
@@ -180,5 +239,17 @@ export default function BookAppointmentPage() {
         </FadeUp>
       </div>
     </div>
+  );
+}
+
+export default function BookAppointmentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FAFBFF] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#1E6FFF]/30 border-t-[#1E6FFF] rounded-full animate-spin" />
+      </div>
+    }>
+      <BookAppointmentForm />
+    </Suspense>
   );
 }
