@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Star, ChevronRight, MessageSquare, ArrowRight, Filter } from 'lucide-react';
 import { FadeUp, StaggerContainer, StaggerItem } from '@/lib/animations';
 import { Badge } from '@/components/ui/Badge';
@@ -110,10 +109,10 @@ export default function SpecialistsPage() {
 
               <div className="space-y-2.5 mb-5 relative z-10">
                 <div className="bg-white/10 rounded-xl p-3 text-xs leading-relaxed backdrop-blur-sm border border-white/10">
-                  "I have lower back pain after running. Who should I see?"
+                  {"\"I have lower back pain after running. Who should I see?\""}
                 </div>
                 <div className="bg-[#10B981]/20 border border-[#10B981]/30 rounded-xl p-3 text-xs leading-relaxed text-[#6EE7B7] ml-4">
-                  "I recommend Dr. Aria or Sarah — both specialize in sports-related spinal recovery."
+                  {"\"I recommend Dr. Aria or Sarah — both specialize in sports-related spinal recovery.\""}
                 </div>
               </div>
 
@@ -246,7 +245,7 @@ export default function SpecialistsPage() {
               </div>
 
               <blockquote className="text-[#4A5568] text-sm leading-relaxed border-l-2 border-[#10B981] pl-4">
-                "The therapists at Healing Motion didn&apos;t just fix my back, they gave me the tools to stay active for years."
+                {"\"The therapists at Healing Motion didn't just fix my back, they gave me the tools to stay active for years.\""}
                 <footer className="mt-2 font-semibold text-[#0D1421]">— James W.</footer>
               </blockquote>
             </div>

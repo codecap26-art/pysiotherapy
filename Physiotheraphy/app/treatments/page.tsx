@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ChevronRight, ArrowRight } from 'lucide-react';
-import { TREATMENTS, TreatmentCategory, TreatmentData } from '@/lib/data/treatments';
+import { ChevronRight } from 'lucide-react';
+import { TREATMENTS, TreatmentData } from '@/lib/data/treatments';
 import { TreatmentModal } from '@/components/ui/TreatmentModal';
 
 const FILTERS = ['All Treatments', 'Physical Therapy', 'Post-Operative Rehabilitation', 'Sports Injury', 'Neurological Rehabilitation', 'Orthopedic Rehabilitation'];
@@ -54,12 +54,6 @@ export default function TreatmentsPage() {
       <div className="absolute left-0 bottom-0 w-[420px] h-[420px] pointer-events-none overflow-hidden"
         style={{ clipPath: 'polygon(0 0, 0 100%, 100% 100%)' }}
       >
-        <img
-          src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=700"
-          alt="" aria-hidden="true"
-          className="w-full h-full object-cover object-top"
-          style={{ opacity: 0.5 }}
-        />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(315deg, rgba(16,185,129,0.80) 0%, rgba(14,165,233,0.55) 55%, transparent 100%)' }}
         />
@@ -69,12 +63,6 @@ export default function TreatmentsPage() {
       <div className="absolute right-0 bottom-0 w-[420px] h-[420px] pointer-events-none overflow-hidden"
         style={{ clipPath: 'polygon(100% 0, 0 100%, 100% 100%)' }}
       >
-        <img
-          src="https://images.unsplash.com/photo-1576091160550-2173ff9e5ee5?auto=format&fit=crop&q=80&w=700"
-          alt="" aria-hidden="true"
-          className="w-full h-full object-cover object-center"
-          style={{ opacity: 0.5 }}
-        />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(45deg, rgba(30,111,255,0.80) 0%, rgba(16,185,129,0.55) 55%, transparent 100%)' }}
         />

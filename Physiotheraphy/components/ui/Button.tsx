@@ -53,7 +53,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
           ${variantStyles[variant]} ${sizeStyles[size]} ${className}
         `}
-        {...(props as any)}
+        {...(props as HTMLMotionProps<'button'>)}
       >
         {isLoading ? (
           <Loader2 className="animate-spin" size={size === 'sm' ? 14 : 16} />

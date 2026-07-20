@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { useState } from 'react';
 import { User, Phone, ChevronDown, Sun, Sunset, Headphones, PhoneCall, Check } from 'lucide-react';

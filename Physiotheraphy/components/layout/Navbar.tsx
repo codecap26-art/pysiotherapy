@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Menu, X, PhoneCall, Activity } from 'lucide-react';
-import { Button, LinkButton } from '@/components/ui/Button';
 
 const NAV_LINKS = [
   { href: '/',                  label: 'Home' },
@@ -17,17 +16,20 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMobileOpen(false);
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  // Close mobile menu on route change
-  useEffect(() => setMobileOpen(false), [pathname]);
 
   return (
     <>

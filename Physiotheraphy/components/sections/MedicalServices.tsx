@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bone, Activity, Dumbbell, Stethoscope, Zap, HeartPulse } from 'lucide-react';
+import { LucideIcon, Bone, Activity, Dumbbell, Zap, HeartPulse } from 'lucide-react';
 
 const services = [
   {
@@ -95,9 +95,6 @@ export function MedicalServices() {
         {/* 4-Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 auto-rows-fr">
           
-          {/* Card 01 */}
-          <ServiceCard service={services[0]} />
-
           {/* Brand Blue Card */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -121,6 +118,9 @@ export function MedicalServices() {
               </p>
             </div>
           </motion.div>
+
+          {/* Card 01 */}
+          <ServiceCard service={services[0]} />
 
           {/* Card 02 */}
           <ServiceCard service={services[1]} />
@@ -156,7 +156,14 @@ export function MedicalServices() {
   );
 }
 
-function ServiceCard({ service }: { service: any }) {
+interface Service {
+  num: string;
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}
+
+function ServiceCard({ service }: { service: Service }) {
   const Icon = service.icon;
   return (
     <motion.div
