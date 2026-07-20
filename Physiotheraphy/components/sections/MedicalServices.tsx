@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { Bone, Activity, Dumbbell, Stethoscope, Zap, HeartPulse } from 'lucide-react';
 
 const services = [
@@ -88,7 +89,7 @@ export function MedicalServices() {
             <p className="text-sm text-[#8896A8] leading-relaxed mb-2">
               We provide a full range of medical services — from consultation to diagnosis and treatment.
             </p>
-            <a href="#" className="text-sm font-semibold text-[#1E6FFF] hover:underline">See all →</a>
+            <Link href="/treatments" className="text-sm font-semibold text-[#1E6FFF] hover:underline">See all →</Link>
           </div>
         </div>
 
@@ -184,12 +185,12 @@ function ServiceCard({ service }: { service: any }) {
       </div>
 
       <div className="relative z-10 flex items-center justify-between mt-8 ml-8">
-        <a href="#" className="text-xs font-semibold text-[#1E6FFF] group-hover:text-white hover:underline transition-colors duration-300">
+        <Link href="/book" className="text-xs font-semibold text-[#1E6FFF] group-hover:text-white hover:underline transition-colors duration-300">
           Make an appointment
-        </a>
-        <a href="#" className="text-xs font-semibold text-[#8896A8] group-hover:text-white/70 hover:text-[#0D1421] group-hover:hover:text-white underline underline-offset-4 decoration-[#E8ECF4] group-hover:decoration-white/30 transition-all duration-300">
+        </Link>
+        <Link href="/treatments" className="text-xs font-semibold text-[#8896A8] group-hover:text-white/70 hover:text-[#0D1421] group-hover:hover:text-white underline underline-offset-4 decoration-[#E8ECF4] group-hover:decoration-white/30 transition-all duration-300">
           Price
-        </a>
+        </Link>
       </div>
     </motion.div>
   );

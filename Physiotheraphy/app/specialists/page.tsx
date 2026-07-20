@@ -53,6 +53,50 @@ const SPECIALISTS = [
     image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
     reviews: 59,
   },
+  {
+    id: 5,
+    name: 'Dr. Michael Hayes',
+    role: 'Pediatric Physiotherapist',
+    roleVariant: 'primary' as const,
+    rating: 4.9,
+    description: 'Specializing in early childhood mobility disorders and developmental delays. Creating a fun, engaging recovery environment for kids.',
+    tags: ['Pediatric', 'Developmental'],
+    image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+    reviews: 112,
+  },
+  {
+    id: 6,
+    name: 'Jessica Wong, PT',
+    role: 'Pelvic Health Specialist',
+    roleVariant: 'warning' as const,
+    rating: 5.0,
+    description: 'Evidence-based pelvic floor rehabilitation for postpartum recovery and chronic pelvic pain management.',
+    tags: ['Pelvic Health', 'Postpartum'],
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+    reviews: 94,
+  },
+  {
+    id: 7,
+    name: 'Dr. James Carter',
+    role: 'Geriatric Specialist',
+    roleVariant: 'accent' as const,
+    rating: 4.8,
+    description: 'Focusing on fall prevention, balance training, and maintaining independence for older adults through targeted strength programs.',
+    tags: ['Geriatric', 'Balance'],
+    image: 'https://images.unsplash.com/photo-1612276529731-4b21494e6d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+    reviews: 81,
+  },
+  {
+    id: 8,
+    name: 'Aisha Patel, DPT',
+    role: 'Cardiopulmonary Rehab',
+    roleVariant: 'danger' as const,
+    rating: 4.9,
+    description: 'Guiding patients through safe return-to-activity protocols following cardiac events or pulmonary conditions.',
+    tags: ['Cardiopulmonary', 'Endurance'],
+    image: 'https://images.unsplash.com/photo-1594824432258-c0b5de3c7e3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80', // using a clean medical placeholder
+    reviews: 67,
+  }
 ];
 
 const SPECIALTY_FILTERS = ['Orthopedic', 'Neurological', 'Sports Injury', 'Post-Op', 'Pediatric'];

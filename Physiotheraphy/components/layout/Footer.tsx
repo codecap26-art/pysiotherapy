@@ -12,8 +12,8 @@ const LEGAL = [
   { href: '/sitemap', label: 'Sitemap' },
 ];
 const CONNECT = [
-  { href: '#', label: 'LinkedIn', icon: '🔗' },
-  { href: '#', label: 'Instagram', icon: '📷' },
+  { href: 'https://linkedin.com', label: 'LinkedIn', icon: '🔗' },
+  { href: 'https://instagram.com', label: 'Instagram', icon: '📷' },
   { href: 'mailto:contact@healingmotion.fit', label: 'Email', icon: '✉️' },
 ];
 
