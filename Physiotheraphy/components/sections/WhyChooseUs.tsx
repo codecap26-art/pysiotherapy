@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const stats = [
   { value: '10+', label: 'Years Experience', color: 'text-[#1E6FFF]' },
@@ -71,17 +72,19 @@ export function WhyChooseUs() {
             >
               {/* Main rounded image */}
               <div className="relative w-[85%] aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl">
-                <img
+                <Image
                   src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=700&h=900"
                   alt="Physiotherapy session"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 85vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0D1421]/40 to-transparent" />
               </div>
 
               {/* Floating stats card */}
               <motion.div
-                className="absolute -right-4 top-10 bg-white rounded-2xl shadow-xl p-5 border border-[#E8ECF4] min-w-[160px]"
+                className="absolute -right-4 top-10 z-20 bg-white rounded-2xl shadow-xl p-5 border border-[#E8ECF4] min-w-[160px]"
                 animate={{ y: [0, -8, 0] }}
                 transition={{ repeat: Infinity, duration: 4 }}
               >
@@ -91,7 +94,7 @@ export function WhyChooseUs() {
 
               {/* Floating success card */}
               <motion.div
-                className="absolute -right-4 bottom-20 bg-gradient-to-br from-[#10B981] to-[#1E6FFF] rounded-2xl shadow-xl p-5 min-w-[180px]"
+                className="absolute -right-4 bottom-20 z-20 bg-gradient-to-br from-[#10B981] to-[#1E6FFF] rounded-2xl shadow-xl p-5 min-w-[180px]"
                 animate={{ y: [0, 8, 0] }}
                 transition={{ repeat: Infinity, duration: 5, delay: 1 }}
               >
@@ -101,10 +104,12 @@ export function WhyChooseUs() {
 
               {/* Second doctor image */}
               <div className="absolute bottom-0 right-12 w-[48%] aspect-[3/4] rounded-2xl overflow-hidden shadow-xl border-4 border-white">
-                <img
+                <Image
                   src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&q=80&w=400&h=530"
                   alt="Doctor"
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 50vw, 25vw"
                 />
               </div>
             </motion.div>

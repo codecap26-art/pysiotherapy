@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { X, CheckCircle2, Clock, Calendar, Activity } from 'lucide-react';
 import { Button } from './Button';
 import { Badge } from './Badge';
@@ -49,7 +50,7 @@ export function TreatmentModal({ treatment, isOpen, onClose }: TreatmentModalPro
           >
             {/* Header / Image Area */}
             <div className="relative h-64 md:h-72 w-full shrink-0">
-              <img src={treatment.image} alt={treatment.title} className="w-full h-full object-cover" />
+              <Image src={treatment.image} alt={treatment.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 896px" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0D1421] to-transparent opacity-90" />
               
               <button

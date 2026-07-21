@@ -1,255 +1,132 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { User, Phone, ChevronDown, Sun, Sunset, Headphones, PhoneCall, Check, UserCircle2, X } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { FadeUp } from '@/lib/animations';
-import { Button } from '@/components/ui/Button';
+import React, { useEffect, useState } from 'react';
+import { useBookingStore } from '@/lib/store/useBookingStore';
+import { CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const STEPS = ['Details', 'Availability', 'Confirm'];
+import Step1Treatment from './steps/Step1Treatment';
+import Step2TreatmentDetails from './steps/Step2TreatmentDetails';
+import Step3Specialist from './steps/Step3Specialist';
+import Step4Type from './steps/Step4Type';
+import Step5DateTime from './steps/Step5DateTime';
+import Step6PatientInfo from './steps/Step6PatientInfo';
+import Step7MedicalForm from './steps/Step7MedicalForm';
+import Step8Summary from './steps/Step8Summary';
+import Step9Review from './steps/Step9Review';
+import Step10Payment from './steps/Step10Payment';
 
-function BookAppointmentForm() {
-  const searchParams = useSearchParams();
-  const doctorId = searchParams.get('doctorId');
-  const doctorName = searchParams.get('doctorName');
-  const doctorDesignation = searchParams.get('doctorDesignation');
+const STEPS = [
+  { id: 1, name: 'Treatment' },
+  { id: 2, name: 'Details' },
+  { id: 3, name: 'Specialist' },
+  { id: 4, name: 'Type' },
+  { id: 5, name: 'Date & Time' },
+  { id: 6, name: 'Patient Info' },
+  { id: 7, name: 'Medical Form' },
+  { id: 8, name: 'Summary' },
+  { id: 9, name: 'Review' },
+  { id: 10, name: 'Payment' },
+];
 
-  const [timeWindow, setTimeWindow] = useState<'morning' | 'afternoon'>('afternoon');
-  const [isLoading, setIsLoading] = useState(false);
-  const [preferredDoctor, setPreferredDoctor] = useState(doctorName || '');
+export default function BookingWizard() {
+  const { currentStep, prevStep, nextStep } = useBookingStore();
+  const [mounted, setMounted] = useState(false);
 
+  // Avoid hydration mismatch for persisted store
   useEffect(() => {
-    if (doctorName) {
-      setPreferredDoctor(decodeURIComponent(doctorName));
-    }
-  }, [doctorName]);
+    setMounted(true);
+  }, []);
 
-  const handleSubmit = () => {
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 2000);
-  };
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#FAFBFF] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#2563EB]/30 border-t-[#2563EB] rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-[#FAFBFF] min-h-screen py-16 relative overflow-hidden">
-      {/* Ambient blobs */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#1E6FFF]/6 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#10B981]/5 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
-
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
-        {/* Progress header */}
-        <FadeUp>
-          <div className="mb-10">
-            <div className="flex justify-between items-end mb-5">
-              <h1 className="text-2xl font-bold text-[#1E6FFF] tracking-tight">Request Appointment</h1>
-              <span className="text-xs font-semibold text-[#8896A8]">Step 1 of 3: Details</span>
-            </div>
-
-            <div className="h-1 bg-[#E8ECF4] rounded-full mb-4 relative overflow-hidden">
-              <motion.div
-                className="absolute left-0 top-0 h-full bg-[#10B981] rounded-full shimmer-bar"
-                initial={{ width: 0 }}
-                animate={{ width: '33.33%' }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+    <div className="min-h-screen bg-[#FAFBFF] pt-24 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Sticky Progress Indicator */}
+        <div className="sticky top-20 z-40 bg-white/90 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-8">
+          <div className="flex items-center justify-between md:hidden mb-4">
+            <span className="font-semibold text-gray-900">Step {currentStep} of 10</span>
+            <span className="text-sm text-[#2563EB] font-medium">{STEPS[currentStep - 1].name}</span>
+          </div>
+          
+          <div className="hidden md:flex items-center justify-between relative">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full -z-10">
+              <motion.div 
+                className="h-full bg-[#2563EB] rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
               />
             </div>
-
-            <div className="flex justify-between">
-              {STEPS.map((step, i) => (
-                <span
-                  key={step}
-                  className={`text-xs font-semibold ${i === 0 ? 'text-[#1E6FFF]' : 'text-[#CDD6E8]'}`}
-                >
-                  {step}
-                </span>
-              ))}
-            </div>
+            
+            {STEPS.map((step) => {
+              const isCompleted = currentStep > step.id;
+              const isCurrent = currentStep === step.id;
+              
+              return (
+                <div key={step.id} className="flex flex-col items-center gap-2 bg-white px-2">
+                  <div 
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${
+                      isCompleted ? 'bg-[#2563EB] text-white' : 
+                      isCurrent ? 'bg-white border-2 border-[#2563EB] text-[#2563EB]' : 
+                      'bg-white border-2 border-gray-200 text-gray-400'
+                    }`}
+                  >
+                    {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : step.id}
+                  </div>
+                  <span className={`text-xs font-medium whitespace-nowrap ${isCurrent ? 'text-[#2563EB]' : 'text-gray-500'}`}>
+                    {step.name}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        </FadeUp>
+        </div>
 
-        {/* Pre-filled doctor banner */}
-        {doctorName && (
-          <FadeUp delay={0.05}>
-            <div className="mb-6 bg-gradient-to-r from-[#EFF5FF] to-[#ECFEFF] border border-[#BFDBFE] rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-[#1E6FFF]/10 flex items-center justify-center shrink-0">
-                <UserCircle2 className="w-5 h-5 text-[#1E6FFF]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-[#8896A8] uppercase tracking-wider mb-0.5">Booking with</p>
-                <p className="text-base font-bold text-[#0D1421] truncate">{decodeURIComponent(doctorName)}</p>
-                {doctorDesignation && (
-                  <p className="text-xs text-[#4A5568] truncate">{decodeURIComponent(doctorDesignation)}</p>
-                )}
-              </div>
-              <Link
-                href="/specialists"
-                className="p-1.5 rounded-full text-[#8896A8] hover:text-[#0D1421] hover:bg-white transition-colors"
-                title="Change doctor"
-              >
-                <X className="w-4 h-4" />
-              </Link>
-            </div>
-          </FadeUp>
+        {/* Back Button */}
+        {currentStep > 1 && currentStep < 10 && (
+          <button 
+            onClick={prevStep}
+            className="flex items-center gap-2 text-gray-500 hover:text-[#2563EB] font-medium mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
         )}
 
-        {/* Form card */}
-        <FadeUp delay={0.1}>
-          <div className="bg-white rounded-3xl border border-[#E8ECF4] shadow-[0_16px_64px_-12px_rgba(0,0,0,0.08)] p-8 md:p-10 mb-6">
-            <h2 className="text-2xl font-bold text-[#0D1421] mb-1 tracking-tight">Patient Information</h2>
-            <p className="text-[#8896A8] text-sm mb-8">Please provide your basic information to help us prepare for your visit.</p>
+        {/* Wizard Content */}
+        <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6 md:p-10 min-h-[600px] relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+                {currentStep === 1 && <Step1Treatment />}
+                {currentStep === 2 && <Step2TreatmentDetails />}
+                {currentStep === 3 && <Step3Specialist />}
+                {currentStep === 4 && <Step4Type />}
+                {currentStep === 5 && <Step5DateTime />}
+                {currentStep === 6 && <Step6PatientInfo />}
+                {currentStep === 7 && <Step7MedicalForm />}
+                {currentStep === 8 && <Step8Summary />}
+                {currentStep === 9 && <Step9Review />}
+                {currentStep === 10 && <Step10Payment />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-2">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8]" />
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm placeholder:text-[#CDD6E8] focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-2">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8]" />
-                  <input
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm placeholder:text-[#CDD6E8] focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Preferred Doctor (pre-filled from query param) */}
-              <div>
-                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-2">
-                  Preferred Specialist
-                </label>
-                <div className="relative">
-                  <UserCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8]" />
-                  <input
-                    type="text"
-                    placeholder="No preference"
-                    value={preferredDoctor}
-                    onChange={(e) => setPreferredDoctor(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm placeholder:text-[#CDD6E8] focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all"
-                  />
-                </div>
-                {doctorName && (
-                  <p className="text-xs text-[#10B981] font-semibold mt-1.5 flex items-center gap-1.5">
-                    <Check className="w-3 h-3" /> Pre-filled from your specialist selection
-                  </p>
-                )}
-              </div>
-
-              {/* Reason */}
-              <div>
-                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-2">
-                  Reason for Visit
-                </label>
-                <div className="relative">
-                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 14h6"/><path d="M12 17v-6"/></svg>
-                  <select className="w-full pl-11 pr-10 py-3.5 bg-[#F8FAFC] border border-[#E8ECF4] rounded-xl text-[#0D1421] text-sm appearance-none cursor-pointer focus:outline-none focus:border-[#1E6FFF] focus:bg-white focus:ring-4 focus:ring-[#1E6FFF]/10 transition-all">
-                    <option value="" disabled>Select an option</option>
-                    <option value="evaluation">Initial Evaluation</option>
-                    <option value="followup">Follow-up Appointment</option>
-                    <option value="postop">Post-Op Rehab</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8896A8] pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Time Window */}
-              <div>
-                <label className="block text-xs font-bold text-[#0D1421] uppercase tracking-wider mb-3">
-                  Preferred Time Window
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {(['morning', 'afternoon'] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setTimeWindow(t)}
-                      className={`
-                        flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 text-sm font-semibold transition-all duration-150
-                        ${timeWindow === t
-                          ? 'border-[#1E6FFF] bg-[#EFF5FF] text-[#1E6FFF] shadow-[0_0_0_4px_rgba(30,111,255,0.1)]'
-                          : 'border-[#E8ECF4] bg-white text-[#4A5568] hover:border-[#BFDBFE] hover:bg-[#F8FAFC]'
-                        }
-                      `}
-                    >
-                      {t === 'morning' ? <Sun className="w-4 h-4" /> : <Sunset className="w-4 h-4" />}
-                      {t === 'morning' ? 'Morning' : 'Afternoon'}
-                      {timeWindow === t && <Check className="w-3.5 h-3.5 ml-auto" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Button
-                variant="accent"
-                size="lg"
-                className="w-full mt-2"
-                isLoading={isLoading}
-                onClick={handleSubmit}
-              >
-                Next Step
-              </Button>
-
-              <p className="text-center text-xs text-[#8896A8]">
-                By clicking Next, you agree to our{' '}
-                <Link href="/privacy" className="text-[#1E6FFF] hover:underline">
-                  Privacy Policy
-                </Link>{' '}
-                regarding your medical data.
-              </p>
-            </form>
-          </div>
-        </FadeUp>
-
-        {/* Contact strip */}
-        <FadeUp delay={0.2}>
-          <div className="bg-white border border-[#E8ECF4] rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[var(--shadow-sm)]">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#EFF5FF] rounded-xl flex items-center justify-center text-[#1E6FFF] shrink-0">
-                <Headphones className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-bold text-[#0D1421] text-sm">Prefer to speak with us directly?</p>
-                <p className="text-[#8896A8] text-xs">Our coordinators are available Mon-Fri, 8am – 6pm.</p>
-              </div>
-            </div>
-            <a href="tel:+15550123" className="flex items-center gap-2 text-[#1E6FFF] font-bold text-lg hover:text-[#1558D6] transition-colors shrink-0">
-              <PhoneCall className="w-5 h-5" />
-              +1-555-0123
-            </a>
-          </div>
-        </FadeUp>
       </div>
     </div>
-  );
-}
-
-export default function BookAppointmentPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#FAFBFF] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#1E6FFF]/30 border-t-[#1E6FFF] rounded-full animate-spin" />
-      </div>
-    }>
-      <BookAppointmentForm />
-    </Suspense>
   );
 }

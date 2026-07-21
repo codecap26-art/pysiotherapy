@@ -40,10 +40,11 @@ const SPECIALTIES: FilterChip[] = [
   { id: 'Orthopedic',        label: 'Orthopedic',       icon: <Bone className="w-3.5 h-3.5" /> },
   { id: 'Neurological',      label: 'Neurological',     icon: <Brain className="w-3.5 h-3.5" /> },
   { id: 'Sports',            label: 'Sports',           icon: <Dumbbell className="w-3.5 h-3.5" /> },
-  { id: 'Pediatric',         label: 'Pediatric',        icon: <Baby className="w-3.5 h-3.5" /> },
+  { id: 'Pediatric',         label: 'Pediatric (Age-wise)', icon: <Baby className="w-3.5 h-3.5" /> },
+  { id: 'Geriatric',         label: 'Geriatric (Age-wise)', icon: <Stethoscope className="w-3.5 h-3.5" /> },
+  { id: 'Home Visit',        label: 'Home Visit',       icon: <Heart className="w-3.5 h-3.5" /> },
   { id: 'Cardiopulmonary',   label: 'Cardiopulmonary',  icon: <Heart className="w-3.5 h-3.5" /> },
   { id: 'Women\'s Health',   label: "Women's Health",   icon: <Users className="w-3.5 h-3.5" /> },
-  { id: 'Geriatric',         label: 'Geriatric',        icon: <Stethoscope className="w-3.5 h-3.5" /> },
   { id: 'Chronic Pain',      label: 'Pain Management',  icon: <Activity className="w-3.5 h-3.5" /> },
 ];
 

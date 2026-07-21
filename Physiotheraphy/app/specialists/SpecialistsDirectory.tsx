@@ -14,9 +14,11 @@ import { Button } from '@/components/ui/Button';
 import { SPECIALISTS, Specialist } from '@/lib/data/specialists';
 import { SpecialistModal } from '@/components/ui/SpecialistModal';
 import { FilterBar } from '@/components/ui/FilterBar';
+import { StartMeetingButton } from '@/components/online-meet/StartMeetingButton';
 
 // ─── Card animation variants ─────────────────────────────────────────────────
-const cardVariants = {
+import { Variants } from 'framer-motion';
+const cardVariants: Variants = {
   hidden:  { opacity: 0, y: 28, scale: 0.97 },
   visible: { opacity: 1, y: 0,  scale: 1,
              transition: { type: 'spring', stiffness: 260, damping: 26 } },
@@ -157,21 +159,26 @@ const DoctorCard = React.memo(function DoctorCard({
         <p className="text-[#4A5568] text-xs leading-relaxed flex-1 mb-5 line-clamp-3">{s.biography}</p>
 
         {/* Buttons */}
-        <div className="flex items-center gap-2.5 mt-auto">
-          <a
-            href={`/book?doctorId=${s.id}&doctorName=${encodeURIComponent(s.name)}&doctorDesignation=${encodeURIComponent(s.designation)}`}
-            onClick={(e) => e.stopPropagation()}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 bg-gradient-to-r from-[#1E6FFF] to-[#06B6D4] hover:from-[#1558D6] hover:to-[#0891B2] text-white rounded-xl font-bold text-xs transition-all shadow-[0_4px_12px_rgba(30,111,255,0.25)] hover:shadow-[0_6px_16px_rgba(30,111,255,0.4)] overflow-hidden relative group/btn"
-          >
-            <span className="relative z-10 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Book Now</span>
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-          </a>
-          <button
-            onClick={(e) => { e.stopPropagation(); onViewProfile(s); }}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 bg-white border border-[#E8ECF4] hover:border-[#1E6FFF]/50 hover:bg-[#F0F5FF] text-[#0D1421] hover:text-[#1E6FFF] rounded-xl font-bold text-xs transition-all"
-          >
-            View Profile <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex flex-col gap-2.5 mt-auto">
+          <div className="flex items-center gap-2.5">
+            <a
+              href={`/book?doctorId=${s.id}&doctorName=${encodeURIComponent(s.name)}&doctorDesignation=${encodeURIComponent(s.designation)}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 bg-gradient-to-r from-[#1E6FFF] to-[#06B6D4] hover:from-[#1558D6] hover:to-[#0891B2] text-white rounded-xl font-bold text-xs transition-all shadow-[0_4px_12px_rgba(30,111,255,0.25)] hover:shadow-[0_6px_16px_rgba(30,111,255,0.4)] overflow-hidden relative group/btn"
+            >
+              <span className="relative z-10 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Book Now</span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+            </a>
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewProfile(s); }}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 bg-white border border-[#E8ECF4] hover:border-[#1E6FFF]/50 hover:bg-[#F0F5FF] text-[#0D1421] hover:text-[#1E6FFF] rounded-xl font-bold text-xs transition-all"
+            >
+              View Profile <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div onClick={(e) => e.stopPropagation()}>
+            <StartMeetingButton buttonText="Start Online Meet" className="w-full h-10 text-xs px-0 py-0" />
+          </div>
         </div>
       </div>
     </motion.div>
@@ -226,11 +233,12 @@ export function SpecialistsDirectory() {
         if (spec === 'sports'         && d.includes('sports'))       return true;
         if (spec === 'orthopedic'     && d.includes('orthopedic'))   return true;
         if (spec === 'neurological'   && d.includes('neurological')) return true;
-        if (spec === 'pediatric'      && d.includes('pediatric'))    return true;
+        if (spec.includes('pediatric')&& d.includes('pediatric'))    return true;
+        if (spec.includes('geriatric')&& d.includes('geriatric'))    return true;
         if (spec === 'cardiopulmonary'&& d.includes('cardiopulmonary')) return true;
         if (spec === "women's health" && d.includes("women's health")) return true;
-        if (spec === 'geriatric'      && d.includes('geriatric'))    return true;
         if (spec === 'chronic pain'   && d.includes('chronic pain')) return true;
+        if (spec === 'home visit') return true; // All our specialists support Home Visit (Mock)
         return s.clinicalSpecializations.some(c => c.toLowerCase().includes(spec));
       });
     }

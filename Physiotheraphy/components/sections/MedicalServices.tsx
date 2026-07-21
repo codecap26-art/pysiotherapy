@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Bone, Activity, Dumbbell, Stethoscope, Zap, HeartPulse } from 'lucide-react';
 
 const services = [
@@ -56,23 +57,27 @@ export function MedicalServices() {
 
       {/* ── Left decorative physio image ── */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[220px] h-[420px] pointer-events-none hidden lg:block" style={{ opacity: 0.07 }}>
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=400"
           alt=""
           aria-hidden="true"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           style={{ filter: 'saturate(0) contrast(1.2)' }}
+          sizes="220px"
         />
       </div>
 
       {/* ── Right decorative physio image ── */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[220px] h-[420px] pointer-events-none hidden lg:block" style={{ opacity: 0.07 }}>
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=400"
           alt=""
           aria-hidden="true"
-          className="w-full h-full object-cover object-left"
+          fill
+          className="object-cover object-left"
           style={{ filter: 'saturate(0) contrast(1.2)' }}
+          sizes="220px"
         />
       </div>
       <div className="container mx-auto px-6 lg:px-12 max-w-[1600px] relative z-10">
@@ -96,9 +101,6 @@ export function MedicalServices() {
         {/* 4-Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 auto-rows-fr">
           
-          {/* Card 01 */}
-          <ServiceCard service={services[0]} />
-
           {/* Brand Blue Card */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -123,6 +125,9 @@ export function MedicalServices() {
             </div>
           </motion.div>
 
+          {/* Card 01 */}
+          <ServiceCard service={services[0]} />
+
           {/* Card 02 */}
           <ServiceCard service={services[1]} />
 
@@ -135,21 +140,7 @@ export function MedicalServices() {
           {/* Card 05 */}
           <ServiceCard service={services[4]} />
 
-          {/* Spanning Photo Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="col-span-1 md:col-span-2 lg:col-span-2 rounded-[2rem] overflow-hidden relative min-h-[320px]"
-          >
-            <img 
-              src="https://images.unsplash.com/photo-1576091160550-2173ff9e5ee5?auto=format&fit=crop&q=80&w=1200&h=800" 
-              alt="Physiotherapy treatment" 
-              className="w-full h-full object-cover"
-            />
-            {/* Faint blue overlay to match brand */}
-            <div className="absolute inset-0 bg-[#1E6FFF]/10 mix-blend-multiply pointer-events-none" />
-          </motion.div>
+
 
         </div>
       </div>
@@ -185,10 +176,10 @@ function ServiceCard({ service }: { service: any }) {
       </div>
 
       <div className="relative z-10 flex items-center justify-between mt-8 ml-8">
-        <Link href="/book" className="text-xs font-semibold text-[#1E6FFF] group-hover:text-white hover:underline transition-colors duration-300">
+        <Link href="/book" className="text-xs font-semibold text-[#1E6FFF] group-hover:text-white hover:underline active:bg-[#1E6FFF]/10 group-hover:active:bg-white/20 px-3 py-1.5 -ml-3 rounded-lg transition-all duration-300">
           Make an appointment
         </Link>
-        <Link href="/treatments" className="text-xs font-semibold text-[#8896A8] group-hover:text-white/70 hover:text-[#0D1421] group-hover:hover:text-white underline underline-offset-4 decoration-[#E8ECF4] group-hover:decoration-white/30 transition-all duration-300">
+        <Link href="/treatments" className="text-xs font-semibold text-[#8896A8] group-hover:text-white/70 hover:text-[#0D1421] group-hover:hover:text-white underline underline-offset-4 decoration-[#E8ECF4] group-hover:decoration-white/30 active:bg-black/5 group-hover:active:bg-white/10 px-3 py-1.5 rounded-lg transition-all duration-300">
           Price
         </Link>
       </div>

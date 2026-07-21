@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Activity, Star, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 
 export function Hero() {
   return (
@@ -21,6 +22,8 @@ export function Hero() {
           backgroundSize: '28px 28px',
         }}
       />
+      {/* Bottom fade to blend with next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 z-0 bg-gradient-to-b from-transparent to-[#f0fdf9]" />
 
       {/* ─── NAVBAR AREA spacer ─── */}
       <div className="h-16 shrink-0" />
@@ -87,12 +90,16 @@ export function Hero() {
           transition={{ duration: 0.9, delay: 0.3 }}
         >
           {/* Transparent image used exactly as it is */}
-          <img
-            src="/images/doctor_removed_bg.png"
-            alt="Doctor"
-            className="w-full object-cover object-top drop-shadow-xl scale-110 origin-bottom"
-            style={{ height: 'clamp(440px, 75vh, 760px)' }}
-          />
+          <div className="relative w-full h-full scale-110 origin-bottom" style={{ height: 'clamp(440px, 75vh, 760px)' }}>
+            <Image
+              src="/images/doctor_removed_bg.png"
+              alt="Doctor"
+              fill
+              className="object-cover object-top drop-shadow-xl"
+              sizes="(max-width: 768px) 100vw, 500px"
+              priority
+            />
+          </div>
         </motion.div>
 
         {/* ── RIGHT COLUMN ── */}

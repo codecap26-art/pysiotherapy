@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 /* ─── milestone data ──────────────────────────────────────────── */
 const MILESTONES = [
@@ -654,7 +655,9 @@ function PhaseCard({ milestone: m, phaseIdx, activePhase, localProgress }: Phase
           marginBottom: 10,
           border: `1px solid rgba(0,0,0,0.05)`,
         }}>
-          <img src={m.image} alt={m.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <Image src={m.image} alt={m.title} fill style={{ objectFit: 'cover' }} sizes="300px" />
+          </div>
         </div>
       )}
 

@@ -139,6 +139,23 @@ export function TreatmentCalculator() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Trust Disclaimer */}
+      <div className="mt-8 pt-5 border-t border-[#E8ECF4] flex flex-col items-center justify-center gap-3 text-center text-[#4A5568]">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#10B981]/10">
+            <svg className="w-4 h-4 text-[#10B981]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-xs font-medium">
+            Trusted by over <span className="font-bold text-[#0D1421]">10,000+</span> patients for their recovery journey.
+          </p>
+        </div>
+        <p className="text-[10px] text-gray-400 max-w-sm leading-tight">
+          *Disclaimer: This calculator provides an estimate only. A precise recovery timeline cannot be determined without a direct clinical consultation.
+        </p>
+      </div>
     </Card>
   );
 }
