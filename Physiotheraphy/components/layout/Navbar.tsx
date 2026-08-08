@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-<<<<<<< HEAD
 import { useState, useEffect, useRef } from 'react';
 import { 
   Menu, X, PhoneCall, Activity, User, LogIn, LogOut, Bell, 
