@@ -1,89 +1,189 @@
-"use client";
+'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useBookingStore } from '@/lib/store/useBookingStore';
-import { TREATMENTS, SPECIALISTS } from '@/lib/bookingData';
-import { ArrowRight, Receipt, PlusCircle, MinusCircle, ShieldCheck } from 'lucide-react';
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { TREATMENTS, SPECIALISTS, formatPrice } from '@/lib/bookingData';
+import { CLINIC_BRANCHES } from '@/lib/clinicData';
+import { 
+  Calendar, Clock, MapPin, Stethoscope, Activity, ShieldCheck, CheckCircle2, Loader2, AlertCircle 
+} from 'lucide-react';
 
 export default function Step8Summary() {
-  const { treatmentId, specialistId, appointmentType, nextStep } = useBookingStore();
-  
-  const treatment = TREATMENTS.find(t => t.id === treatmentId);
-  const specialist = SPECIALISTS.find(s => s.id === specialistId);
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const { 
+    treatmentId, specialistId, clinicId, date, timeSlot,
+    painLevel, painDuration, reasonForVisit, appointmentType,
+    confirmBooking 
+  } = useBookingStore();
 
-  if (!treatment || !specialist || !appointmentType) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-red-500 mb-4 font-medium">Missing booking details. Please restart your booking.</p>
-        <button onClick={() => useBookingStore.getState().resetBooking()} className="px-6 py-2 bg-[#2563EB] text-white rounded-lg hover:bg-blue-700">
-          Start Over
-        </button>
-      </div>
-    );
-  }
+  const [loading, setLoading] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
 
-  // @ts-ignore
-  const basePrice = ((specialist.pricing as any)?.[appointmentType] || treatment.startingPrice) as number;
-  const taxes = Math.round(basePrice * 0.18); // 18% GST mock
-  const total = basePrice + taxes;
+  const treatment = TREATMENTS.find((t) => t.id === treatmentId);
+  const specialist = SPECIALISTS.find((s) => s.id === specialistId);
+  const clinic = CLINIC_BRANCHES.find((c) => c.id === clinicId);
+
+  const fee = treatment?.startingPrice || 1500;
+  const tax = Math.round(fee * 0.18);
+  const totalAmount = fee + tax;
+
+  const handleConfirm = async () => {
+    if (!agreeTerms) return;
+    setLoading(true);
+
+    try {
+      const newBooking = await confirmBooking(user);
+      if (newBooking) {
+        router.push(`/book/success?id=${newBooking.id}`);
+      } else {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Booking submission error:', err);
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto w-full">
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#0D1421] mb-2">Price Summary</h2>
-        <p className="text-[#8896A8]">Transparent pricing with no hidden costs.</p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      className="space-y-6"
+    >
+      <div>
+        <span className="text-xs font-bold uppercase tracking-widest text-[#1E6FFF] bg-[#EFF5FF] px-3 py-1 rounded-full">
+          Step 8 of 8
+        </span>
+        <h2 className="text-2xl sm:text-3xl font-black text-[#0D1421] mt-3">
+          Review & Confirm Appointment
+        </h2>
+        <p className="text-[#64748B] text-sm mt-1">
+          Review your clinical schedule details below. No advance payment needed.
+        </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden mb-8">
-        <div className="bg-[#F8FAFC] p-6 border-b border-gray-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#E0F2FE] flex items-center justify-center">
-            <Receipt className="w-6 h-6 text-[#2563EB]" />
-          </div>
-          <div>
-            <h3 className="font-bold text-[#0D1421] text-lg">Itemized Breakdown</h3>
-            <p className="text-sm text-gray-500">Booking Reference: #{Math.floor(Math.random() * 1000000)}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Details */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Treatment & Specialist */}
+          <div className="bg-white p-6 rounded-3xl border-2 border-[#E8ECF4] shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-[#0D1421] flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#1E6FFF]" />
+              Clinical Consultation Details
+            </h3>
 
-        <div className="p-6 md:p-8 space-y-6">
-          <div className="flex justify-between items-center pb-6 border-b border-gray-100">
-            <div>
-              <p className="font-bold text-[#0D1421]">{treatment.name}</p>
-              <p className="text-sm text-gray-500 capitalize">{appointmentType} Appointment</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Treatment</div>
+                <div className="text-base font-bold text-[#0D1421] mt-1">{treatment?.name || 'Physiotherapy'}</div>
+                <div className="text-xs text-[#1E6FFF] font-medium mt-0.5">{treatment?.duration} duration</div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Assigned Therapist</div>
+                <div className="text-base font-bold text-[#0D1421] mt-1">{specialist?.name || 'Dr. Sarah Jenkins'}</div>
+                <div className="text-xs text-[#64748B] font-medium mt-0.5">{specialist?.title}</div>
+              </div>
             </div>
-            <span className="font-semibold text-[#0D1421]">₹{basePrice}</span>
-          </div>
 
-          <div className="flex justify-between items-center pb-6 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <PlusCircle className="w-4 h-4 text-gray-400" />
-              <p className="text-[#4A5568]">Taxes & Fees (18% GST)</p>
+            {/* Clinic & Timing */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Clinic Branch</div>
+                <div className="text-sm font-bold text-[#0D1421] mt-1">{clinic?.name}</div>
+                <div className="text-xs text-[#64748B] mt-0.5">{clinic?.address}</div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Schedule & Date</div>
+                <div className="text-sm font-bold text-[#0D1421] mt-1">{date}</div>
+                <div className="text-xs text-[#10B981] font-semibold mt-0.5">{timeSlot} ({appointmentType})</div>
+              </div>
             </div>
-            <span className="font-semibold text-[#0D1421]">₹{taxes}</span>
-          </div>
 
-          <div className="flex justify-between items-center pt-2">
-            <div>
-              <p className="text-xl font-bold text-[#0D1421]">Grand Total</p>
-              <p className="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
-                <ShieldCheck className="w-3 h-3" />
-                Secure Payment
+            {/* Symptoms summary */}
+            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 text-xs text-[#64748B] space-y-1">
+              <div className="font-bold text-[#0D1421] flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+                Pain Assessment Summary
+              </div>
+              <p>
+                <strong>Pain Severity:</strong> {painLevel}/10 • <strong>Duration:</strong> {painDuration}
               </p>
+              {reasonForVisit && (
+                <p>
+                  <strong>Primary Concern:</strong> {reasonForVisit}
+                </p>
+              )}
             </div>
-            <span className="text-3xl font-black text-[#2563EB]">₹{total}</span>
+          </div>
+        </div>
+
+        {/* Right Col: Price Breakdown & Confirmation */}
+        <div className="space-y-4">
+          <div className="bg-white p-6 rounded-3xl border-2 border-[#E8ECF4] shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-[#0D1421]">Payment & Fee Summary</h3>
+
+            <div className="space-y-2.5 text-xs text-[#64748B] border-b border-gray-100 pb-4">
+              <div className="flex justify-between">
+                <span>Clinical Consultation Fee</span>
+                <span className="font-bold text-[#0D1421]">{formatPrice(fee)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Healthcare GST (18%)</span>
+                <span className="font-bold text-[#0D1421]">{formatPrice(tax)}</span>
+              </div>
+              <div className="flex justify-between text-[#10B981] font-semibold">
+                <span>Online Booking Discount</span>
+                <span>FREE (₹0)</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-base font-extrabold text-[#0D1421]">
+              <span>Total Payable at Clinic</span>
+              <span className="text-xl text-[#1E6FFF]">{formatPrice(totalAmount)}</span>
+            </div>
+
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-800 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Zero cancellation fee up to 2 hours before session.</span>
+            </div>
+
+            <label className="flex items-start gap-2.5 text-xs text-[#64748B] cursor-pointer pt-2">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded text-[#1E6FFF] focus:ring-[#1E6FFF]"
+              />
+              <span>I confirm the appointment details and agree to Healing Motion clinic policies.</span>
+            </label>
+
+            <button
+              onClick={handleConfirm}
+              disabled={loading || !agreeTerms}
+              className="w-full py-4 px-6 rounded-2xl bg-[#1E6FFF] text-white font-bold text-sm shadow-[0_4px_16px_rgba(30,111,255,0.3)] hover:bg-[#1558D6] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Confirming Booking...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>Confirm Appointment</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
-
-      <div className="mt-auto flex justify-end pt-6">
-        <button
-          onClick={nextStep}
-          className="inline-flex items-center gap-2 px-8 py-3.5 bg-[#2563EB] text-white font-semibold rounded-xl shadow-[0_8px_20px_rgba(37,99,235,0.3)] hover:bg-[#1D4ED8] hover:-translate-y-0.5 transition-all w-full md:w-auto justify-center"
-        >
-          Review Booking
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
+    </motion.div>
   );
 }

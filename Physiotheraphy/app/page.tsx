@@ -1,6 +1,5 @@
 import React from 'react';
 import { Hero } from '../components/sections/Hero';
-import { MedicalServices } from '../components/sections/MedicalServices';
 import { WhyChooseUs } from '../components/sections/WhyChooseUs';
 import { InteractivePainSelector } from '../components/sections/InteractivePainSelector';
 import { TreatmentCalculator } from '../components/sections/TreatmentCalculator';
@@ -10,9 +9,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#FAFBFF] text-[#0D1421]">
       <Hero />
-
-      {/* Medical Services */}
-      <MedicalServices />
 
       {/* Stats + Why Choose Us */}
       <WhyChooseUs />

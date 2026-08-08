@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { FadeUp, StaggerContainer, StaggerItem } from '@/lib/animations';
 import { ScrollThreeThread } from '@/components/sections/ScrollThreeThread';
+import { RecoveryProcessTimeline } from '@/components/sections/RecoveryProcessTimeline';
 
 export const metadata: Metadata = { title: 'Recovery Timeline' };
 
@@ -25,6 +26,9 @@ export default function RecoveryTimelinePage() {
     <div className="bg-[#FAFAF8]">
       {/* ── 3D Scroll Thread Animation ── */}
       <ScrollThreeThread />
+
+      {/* ── 5-Step Recovery Process ── */}
+      <RecoveryProcessTimeline />
 
       {/* ── FAQs ── */}
       <section className="py-24 bg-white">
