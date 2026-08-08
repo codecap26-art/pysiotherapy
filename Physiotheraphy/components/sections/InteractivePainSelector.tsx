@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../ui/Card';
-import { Info, Target, Zap } from 'lucide-react';
+import { Info, Zap } from 'lucide-react';
 
 const painData: Record<string, { symptoms: string, treatment: string, recovery: string }> = {
   Neck: {
