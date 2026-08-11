@@ -164,81 +164,81 @@ export default function PatientAppointmentsPage() {
                 key={apt.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-3xl border-2 border-[#E8ECF4] p-6 shadow-xs hover:border-[#BFDBFE] transition-all"
+                className="bg-white rounded-2xl border-2 border-[#E8ECF4] p-4 sm:p-5 shadow-xs hover:border-[#BFDBFE] transition-all flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-[#1E6FFF] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-100">
-                        {apt.bookingRef}
-                      </span>
-                      <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md ${
-                        apt.status === 'completed'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : apt.status === 'cancelled'
-                          ? 'bg-rose-100 text-rose-800'
-                          : 'bg-blue-100 text-[#1E6FFF]'
-                      }`}>
-                        {apt.status}
-                      </span>
-                      <span className="text-[11px] text-[#64748B]">
-                        • {(apt.appointmentType || 'Consultation').toUpperCase()}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-bold text-[#0D1421]">{apt.treatmentName}</h3>
-                    <p className="text-xs text-[#64748B]">
-                      Assigned to <strong className="text-[#0D1421]">{apt.specialistName}</strong> ({apt.specialistTitle})
-                    </p>
-                  </div>
+                {/* Time & Date Block */}
+                <div className="w-20 text-center shrink-0 border-b sm:border-b-0 sm:border-r border-gray-100 pb-3 sm:pb-0 sm:pr-4">
+                  <div className="text-sm font-black text-[#0D1421]">{apt.timeSlot}</div>
+                  <div className="text-[10px] font-bold text-[#8896A8] mt-0.5">{apt.date}</div>
+                </div>
 
-                  <div className="text-right self-start lg:self-auto">
-                    <div className="text-base font-extrabold text-[#0D1421]">
-                      {formatPrice(apt.totalAmount)}
-                    </div>
-                    <div className="text-[11px] text-[#64748B]">Includes 18% GST</div>
+                {/* Status Indicator Line (Desktop) */}
+                <div className={`hidden sm:block w-1 h-10 rounded-full shrink-0 ${
+                  apt.status === 'confirmed' ? 'bg-[#1E6FFF]' : 
+                  apt.status === 'completed' ? 'bg-[#10B981]' : 
+                  apt.status === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500'
+                }`} />
+
+                {/* Main Content */}
+                <div className="flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-[#1E6FFF] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                      {apt.bookingRef}
+                    </span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                      apt.status === 'completed'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : apt.status === 'cancelled'
+                        ? 'bg-rose-100 text-rose-800'
+                        : apt.status === 'rescheduled'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-blue-100 text-[#1E6FFF]'
+                    }`}>
+                      {apt.status}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#0D1421]">{apt.treatmentName}</h3>
+                  <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
+                    <span className="font-semibold text-[#0D1421]">Dr. {apt.specialistName?.replace('Dr. ', '')}</span>
+                    <span>•</span>
+                    <span className="truncate flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-[#10B981]" />
+                      {apt.clinicName}
+                    </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-xs text-[#64748B]">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#1E6FFF]" />
-                    <span className="font-semibold text-[#0D1421]">{apt.date}</span>
+                {/* Right Actions / Price */}
+                <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100 shrink-0">
+                  <div className="text-right">
+                    <div className="text-sm font-extrabold text-[#0D1421]">{formatPrice(apt.totalAmount)}</div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#1E6FFF]" />
-                    <span>{apt.timeSlot}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-[#10B981]" />
-                    <span className="truncate">{apt.clinicName}</span>
-                  </div>
-                </div>
 
-                {/* Actions for upcoming sessions */}
-                {isUpcoming && (
-                  <div className="flex flex-wrap items-center justify-end gap-2 pt-4 mt-4 border-t border-gray-100">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedForReschedule(apt);
-                        setNewDate(apt.date);
-                        setNewTime(apt.timeSlot);
-                      }}
-                      className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-[#1E6FFF]" />
-                      <span>Reschedule</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCancelAppointment(apt.id)}
-                      className="px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <XCircle className="w-3.5 h-3.5" />
-                      <span>Cancel</span>
-                    </button>
-                  </div>
-                )}
+                  {isUpcoming && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        title="Reschedule"
+                        onClick={() => {
+                          setSelectedForReschedule(apt);
+                          setNewDate(apt.date);
+                          setNewTime(apt.timeSlot);
+                        }}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#1E6FFF] hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Cancel"
+                        onClick={() => handleCancelAppointment(apt.id)}
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all border border-transparent hover:border-rose-100"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             );
           })}

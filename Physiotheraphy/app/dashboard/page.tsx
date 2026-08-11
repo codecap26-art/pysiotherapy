@@ -21,7 +21,7 @@ export default function PatientDashboardOverview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.role === 'therapist') {
+    if (user?.role === 'therapist' || user?.role === 'doctor') {
       router.push('/dashboard/therapist');
       return;
     } else if (user?.role === 'admin') {

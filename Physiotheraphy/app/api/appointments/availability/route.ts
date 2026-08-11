@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverDb } from '@/lib/serverDb';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,13 +14,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get appointments for the specific specialist
-    const appointments = serverDb.getAppointments({ specialistId });
+    // Query Supabase for appointments for this specialist on this date
+    const { data: appointments, error } = await supabase
+      .from('appointments')
+      .select('time_slot')
+      .eq('specialist_id', specialistId)
+      .eq('date', date)
+      .neq('status', 'cancelled');
 
-    // Find slots that are booked on the specific date and not cancelled
-    const bookedSlots = appointments
-      .filter((apt) => apt.date === date && apt.status !== 'cancelled')
-      .map((apt) => apt.timeSlot);
+    if (error) {
+      console.error('Error fetching availability:', error);
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    // Extract just the time slots that are booked
+    const bookedSlots = appointments.map((apt) => apt.time_slot);
 
     return NextResponse.json({
       success: true,

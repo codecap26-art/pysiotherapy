@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/auth/login');
   };
 
-  const isTherapist = user?.role === 'therapist' || pathname?.includes('/therapist');
+  const isTherapist = user?.role === 'therapist' || user?.role === 'doctor' || pathname?.includes('/therapist');
 
   const PATIENT_NAV = [
     { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -83,13 +83,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </p>
                 </div>
                 <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${
-                  user?.role === 'therapist' 
+                  user?.role === 'therapist' || user?.role === 'doctor'
                     ? 'bg-blue-100 text-[#1E6FFF]' 
                     : user?.role === 'admin' 
                     ? 'bg-purple-100 text-[#7C3AED]' 
                     : 'bg-emerald-100 text-[#10B981]'
                 }`}>
-                  {user?.role === 'therapist' ? 'Doctor / Therapist' : user?.role === 'admin' ? 'System Admin' : 'Patient'}
+                  {user?.role === 'therapist' || user?.role === 'doctor' ? 'Doctor / Therapist' : user?.role === 'admin' ? 'System Admin' : 'Patient'}
                 </span>
               </div>
             </div>

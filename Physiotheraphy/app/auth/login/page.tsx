@@ -102,10 +102,13 @@ export default function LoginPage() {
           <span>⚡ One-Click Demo Logins</span>
           <span className="text-[10px] text-[#1E6FFF] font-medium">Click to pre-fill</span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           <button
             type="button"
-            onClick={() => handleRoleFill('patient')}
+            onClick={() => {
+              setEmail('rahul@demo.com');
+              setPassword('Demo@1234');
+            }}
             className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-white border border-[#CBD5E1] text-[#0D1421] hover:border-[#1E6FFF] hover:text-[#1E6FFF] transition-all shadow-xs"
           >
             <User className="w-3.5 h-3.5 text-[#10B981]" />
@@ -113,20 +116,50 @@ export default function LoginPage() {
           </button>
           <button
             type="button"
-            onClick={() => handleRoleFill('doctor')}
-            className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-white border border-[#CBD5E1] text-[#0D1421] hover:border-[#1E6FFF] hover:text-[#1E6FFF] transition-all shadow-xs"
-          >
-            <Stethoscope className="w-3.5 h-3.5 text-[#1E6FFF]" />
-            Doctor
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleFill('admin')}
+            onClick={() => {
+              setEmail('admin@healingmotion.com');
+              setPassword('Admin@1234');
+            }}
             className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-white border border-[#CBD5E1] text-[#0D1421] hover:border-[#1E6FFF] hover:text-[#1E6FFF] transition-all shadow-xs"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
             Admin
           </button>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Demo Doctors:</div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('sarah.jenkins@healingmotion.com');
+                setPassword('Doctor@1234');
+              }}
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-all shadow-xs"
+            >
+              Dr. Sarah
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('marcus.thorne@healingmotion.com');
+                setPassword('Doctor@1234');
+              }}
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-all shadow-xs"
+            >
+              Dr. Marcus
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('david.chen@healingmotion.com');
+                setPassword('Doctor@1234');
+              }}
+              className="flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-all shadow-xs"
+            >
+              Dr. David
+            </button>
+          </div>
         </div>
       </div>
 

@@ -186,7 +186,7 @@ export default function ProfileSettingsPage() {
         </div>
 
         {/* Doctor Specific Info if role === therapist */}
-        {user?.role === 'therapist' && (
+        {(user?.role === 'therapist' || user?.role === 'doctor') && (
           <div className="bg-white rounded-3xl border-2 border-[#E8ECF4] p-6 sm:p-8 shadow-xs space-y-4">
             <h2 className="text-base font-bold text-[#0D1421] flex items-center gap-2">
               <Stethoscope className="w-5 h-5 text-[#1E6FFF]" />

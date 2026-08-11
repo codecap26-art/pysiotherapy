@@ -36,7 +36,7 @@ export default function AuthGuard({
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
       // Role unauthorized: redirect to user's proper portal
-      if (user.role === 'therapist') {
+      if (user.role === 'therapist' || user.role === 'doctor') {
         router.push('/dashboard/therapist');
       } else if (user.role === 'admin') {
         router.push('/admin');

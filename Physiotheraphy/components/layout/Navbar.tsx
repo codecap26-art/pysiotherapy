@@ -76,7 +76,7 @@ export default function Navbar() {
 
   const getDashboardHref = () => {
     if (!user) return '/dashboard';
-    if (user.role === 'therapist') return '/dashboard/therapist';
+    if (user.role === 'therapist' || user.role === 'doctor') return '/dashboard/therapist';
     if (user.role === 'admin') return '/admin';
     return '/dashboard';
   };
@@ -87,17 +87,18 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 28 }}
         className={`
-          fixed top-0 left-0 right-0 z-50 h-16
-          transition-[background,border,box-shadow] duration-300
+          fixed z-50 flex items-center
+          transition-all duration-300
+          left-4 right-4 top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[95%] lg:w-[90%] md:max-w-6xl h-16 rounded-[20px]
           ${scrolled
-            ? 'bg-white/90 backdrop-blur-xl border-b border-[#E8ECF4] shadow-[0_1px_12px_rgba(0,0,0,0.06)]'
-            : 'bg-transparent border-b border-transparent'
+            ? 'bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)]'
+            : 'bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           }
         `}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+        <div className="w-full px-4 sm:px-5 lg:px-6 h-full flex items-center justify-between">
           {/* Logo — left corner */}
-          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0 outline-none">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#10B981] to-[#1E6FFF] flex items-center justify-center shadow-[0_2px_8px_rgba(30,111,255,0.4)]">
               <Activity className="w-5 h-5 text-white" />
             </div>
@@ -114,7 +115,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1.5">
             {NAV_LINKS.map(({ href, label }) => {
               const isActive = pathname === href;
               return (
@@ -122,38 +123,31 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   className={`
-                    relative px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
+                    px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-400
                     ${isActive
-                      ? scrolled ? 'text-[#1E6FFF]' : 'text-white'
+                      ? scrolled ? 'bg-[#EFF5FF] text-[#1E6FFF]' : 'bg-white/20 text-white'
                       : scrolled
-                        ? 'text-[#4A5568] hover:text-[#0D1421] hover:bg-[#F8FAFC]'
+                        ? 'text-[#4A5568] hover:text-[#0D1421] hover:bg-slate-100/60'
                         : 'text-white/85 hover:text-white hover:bg-white/10'
                     }
                   `}
                 >
                   {label}
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active"
-                      className={`absolute inset-0 rounded-lg -z-10 ${
-                        scrolled ? 'bg-[#EFF5FF]' : 'bg-white/15'
-                      }`}
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
                 </Link>
               );
             })}
           </div>
 
           {/* Desktop Right Action Area */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 shrink-0">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3" ref={dropdownRef}>
                 {/* Notification Bell */}
                 <Link
                   href="/dashboard/notifications"
-                  className="relative p-2 rounded-xl text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0D1421] transition-all"
+                  className={`relative p-2 rounded-xl transition-all ${
+                    scrolled ? 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0D1421]' : 'text-white/90 hover:bg-white/10 hover:text-white'
+                  }`}
                   aria-label="Notifications"
                 >
                   <Bell className="w-5 h-5" />
@@ -169,24 +163,26 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-2.5 p-1.5 pr-3 rounded-2xl bg-white border border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:shadow-xs transition-all cursor-pointer"
+                    className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-full transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                      scrolled ? 'bg-white border border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:shadow-xs' : 'bg-white/10 border border-white/20 hover:bg-white/20'
+                    }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-[#EFF5FF] border border-[#BFDBFE] flex items-center justify-center text-xs font-black text-[#1E6FFF] overflow-hidden">
+                    <div className="w-7 h-7 rounded-full bg-[#EFF5FF] border border-[#BFDBFE] flex items-center justify-center text-xs font-black text-[#1E6FFF] overflow-hidden shrink-0">
                       {user.avatar ? (
                         <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         <span>{user.firstName?.[0] || 'U'}</span>
                       )}
                     </div>
-                    <div className="text-left leading-none">
-                      <div className="text-xs font-bold text-[#0D1421] max-w-[100px] truncate">
+                    <div className="text-left leading-none max-w-[90px]">
+                      <div className={`text-xs font-bold truncate ${scrolled ? 'text-[#0D1421]' : 'text-white'}`}>
                         {user.firstName}
                       </div>
-                      <div className="text-[9px] font-semibold text-[#1E6FFF] uppercase tracking-wider mt-0.5">
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${scrolled ? 'text-[#1E6FFF]' : 'text-blue-200'}`}>
                         {user.role}
                       </div>
                     </div>
-                    <ChevronDown className="w-3.5 h-3.5 text-[#8896A8]" />
+                    <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${scrolled ? 'text-[#8896A8]' : 'text-white/70'}`} />
                   </button>
 
                   {/* Dropdown Menu */}
@@ -210,16 +206,16 @@ export default function Navbar() {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-[#0D1421] hover:bg-[#EFF5FF] hover:text-[#1E6FFF] transition-colors"
                         >
                           <LayoutDashboard className="w-4 h-4 text-[#1E6FFF]" />
-                          <span>{user.role === 'therapist' ? 'Doctor Portal' : user.role === 'admin' ? 'Admin Portal' : 'Patient Dashboard'}</span>
+                          <span>{user.role === 'therapist' || user.role === 'doctor' ? 'Doctor Portal' : user.role === 'admin' ? 'Admin Portal' : 'Patient Dashboard'}</span>
                         </Link>
 
                         <Link
-                          href={user.role === 'therapist' ? '/dashboard/therapist' : '/dashboard/appointments'}
+                          href={user.role === 'therapist' || user.role === 'doctor' ? '/dashboard/therapist' : '/dashboard/appointments'}
                           onClick={() => setUserDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-[#0D1421] hover:bg-[#EFF5FF] hover:text-[#1E6FFF] transition-colors"
                         >
                           <Calendar className="w-4 h-4 text-[#10B981]" />
-                          <span>{user.role === 'therapist' ? 'Clinical Schedule' : 'My Appointments'}</span>
+                          <span>{user.role === 'therapist' || user.role === 'doctor' ? 'Clinical Schedule' : 'My Appointments'}</span>
                         </Link>
 
                         <Link
@@ -248,24 +244,27 @@ export default function Navbar() {
 
                 <Link
                   href="/book"
-                  className="px-4 py-2 bg-gradient-to-r from-[#10B981] to-[#1E6FFF] text-white text-xs font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity"
+                  className="hidden xl:flex px-4 py-2 bg-[#1E6FFF] text-white text-[13px] font-bold rounded-full shadow-md hover:bg-[#1558D6] transition-colors items-center"
                 >
-                  Book Session
+                  Book Appointment
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-[#0D1421] hover:text-[#1E6FFF] hover:bg-[#F8FAFC] border border-[#E2E8F0] transition-all"
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold transition-all border ${
+                    scrolled 
+                      ? 'text-[#4A5568] hover:text-[#0D1421] hover:bg-slate-50 border-transparent hover:border-gray-200' 
+                      : 'text-white hover:bg-white/10 border-transparent'
+                  }`}
                 >
-                  <LogIn className="w-3.5 h-3.5 text-[#1E6FFF]" />
                   <span>Sign In</span>
                 </Link>
 
                 <Link
                   href="/book"
-                  className="px-5 py-2.5 bg-gradient-to-r from-[#10B981] to-[#1E6FFF] text-white text-xs font-bold rounded-xl shadow-[0_4px_15px_rgba(30,111,255,0.3)] hover:opacity-90 transition-opacity"
+                  className="px-5 py-2 bg-[#1E6FFF] text-white text-[13px] font-bold rounded-full shadow-md hover:bg-[#1558D6] transition-colors flex items-center"
                 >
                   Book Appointment
                 </Link>
@@ -278,7 +277,7 @@ export default function Navbar() {
             {isAuthenticated && user && (
               <Link
                 href="/dashboard/notifications"
-                className="relative p-2 rounded-lg text-[#64748B]"
+                className={`relative p-2 rounded-lg ${scrolled ? 'text-[#64748B]' : 'text-white'}`}
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -291,7 +290,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="p-2 rounded-lg text-[#4A5568] hover:bg-[#F8FAFC] transition-colors"
+              className={`p-2 rounded-xl transition-colors ${scrolled ? 'text-[#4A5568] hover:bg-slate-100' : 'text-white hover:bg-white/10'}`}
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

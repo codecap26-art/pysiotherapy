@@ -43,22 +43,21 @@ export function Hero() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7 }}
         >
-          {/* Small top label */}
-          <p className="text-[#4A5568] text-base lg:text-lg font-medium mb-4 tracking-wide">
-            Medicine with meaning. Design with care.<br />
-            <span className="text-[#8896A8]">Where innovation meets compassion.</span>
+          {/* Eyebrow */}
+          <p className="text-[12px] lg:text-[14px] font-semibold uppercase tracking-[0.15em] text-[#64748B] mb-5 lg:mb-6">
+            Modern Physiotherapy • Human-Centered Care
           </p>
 
           {/* Giant headline */}
-          <h1 className="text-[clamp(56px,7vw,110px)] font-black text-[#0D1421] leading-[0.9] tracking-tighter mb-4">
+          <h1 className="text-[clamp(48px,8vw,100px)] font-extrabold text-[#0D1421] leading-[0.9] tracking-[-0.04em] mb-2 lg:mb-3">
             Healing<br />Motion
           </h1>
-          <h2 className="text-[clamp(28px,4vw,60px)] font-bold text-[#1E6FFF] tracking-tight leading-none mb-6">
+          <h2 className="text-[clamp(32px,5vw,52px)] font-semibold text-[#1E6FFF] tracking-tight leading-none mb-6 lg:mb-7">
             Physiotherapy
           </h2>
 
-          <p className="text-[#4A5568] text-base lg:text-xl leading-relaxed max-w-lg mb-8">
-            We treat all symptoms. We care about each person and provide the best recovery center experience.
+          <p className="text-[18px] lg:text-[20px] text-[#475569] leading-[1.6] max-w-[460px] mb-8 lg:mb-9">
+            Personalized physiotherapy designed around your movement, recovery, and long-term wellbeing.
           </p>
 
           {/* Book now button */}
@@ -88,25 +87,34 @@ export function Hero() {
 
         {/* ── CENTER DOCTOR IMAGE ── */}
         <motion.div
-          className="hidden md:flex flex-col items-center justify-end z-20 shrink-0 self-end -mb-10 lg:-mb-16 pointer-events-none -mx-8 lg:-mx-16 xl:-mx-28"
+          className="flex flex-col items-center justify-end z-20 shrink-0 self-center lg:self-end mt-12 mb-8 lg:mt-0 lg:-mb-6 pointer-events-none mx-auto lg:mx-4"
           style={{ width: 'clamp(500px, 58vw, 900px)' }}
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.3 }}
+          transition={{ duration: 0.9, delay: 0.3, ease: "easeOut" }}
         >
-          <div
+          <motion.div
             className="relative w-full h-full origin-bottom"
-            style={{ height: 'clamp(600px, 92vh, 1000px)' }}
+            style={{ 
+              height: 'clamp(600px, 92vh, 1000px)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
+            }}
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           >
+            {/* Soft ambient glow behind the figure */}
+            <div className="absolute inset-0 bg-[#1E6FFF]/5 blur-[80px] rounded-full top-1/4 scale-75" />
+            
             <Image
               src="/images/ChatGPT Image Aug 11, 2026, 09_38_53 AM.png"
               alt="Doctor"
               fill
-              className="object-contain object-bottom drop-shadow-2xl scale-[1.10]"
-              sizes="(max-width: 768px) 100vw, 1000px"
+              className="object-contain object-bottom drop-shadow-[0_15px_35px_rgba(0,0,0,0.1)] scale-[1.02]"
+              sizes="(max-width: 1024px) 70vw, 35vw"
               priority
             />
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* ── RIGHT COLUMN ── */}
@@ -202,7 +210,7 @@ export function Hero() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="rounded-3xl p-6 lg:p-8 backdrop-blur-md border bg-white/15 border-white/25 shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 hover:scale-[1.03]"
+              className="rounded-3xl p-6 lg:p-8 backdrop-blur-2xl bg-white/10 border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_32px_0_rgba(0,0,0,0.1)] transition-all duration-300 hover:scale-[1.04] hover:bg-white/18 hover:border-white/40 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_12px_40px_0_rgba(0,0,0,0.15)]"
             >
               <p className="text-4xl md:text-6xl font-black mb-2 tracking-tight text-white">
                 {s.value}
