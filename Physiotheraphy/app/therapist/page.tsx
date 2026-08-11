@@ -1,18 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { SPECIALISTS, MOCK_SESSIONS, formatPrice } from '@/lib/bookingData';
-
-const specialist = SPECIALISTS[0]; // Dr. Sarah Jenkins
-
-const todaySchedule = [
-  { id: 1, time: '9:00 AM', patient: 'Rahul Sharma', treatment: 'Back Pain Therapy', type: 'Follow-up', duration: '45 min', status: 'confirmed', room: 'Room A' },
-  { id: 2, time: '10:00 AM', patient: 'Priya Mehta', treatment: 'Knee Rehabilitation', type: 'Initial Assessment', duration: '60 min', status: 'confirmed', room: 'Room B' },
-  { id: 3, time: '11:00 AM', patient: 'Arjun Nair', treatment: 'ACL Rehabilitation', type: 'Follow-up', duration: '75 min', status: 'in-progress', room: 'Room A' },
-  { id: 4, time: '12:00 PM', patient: '—', treatment: '—', type: 'Lunch Break', duration: '60 min', status: 'break', room: '' },
-  { id: 5, time: '1:00 PM', patient: 'Kavitha Reddy', treatment: 'Post-Surgery Rehab', type: 'Follow-up', duration: '60 min', status: 'pending', room: 'Room C' },
-  { id: 6, time: '2:30 PM', patient: 'Suresh Patel', treatment: 'Sciatica Treatment', type: 'Follow-up', duration: '60 min', status: 'pending', room: 'Room A' },
-  { id: 7, time: '4:00 PM', patient: 'Deepika Singh', treatment: 'Shoulder Rehabilitation', type: 'Initial Assessment', duration: '60 min', status: 'pending', room: 'Room B' },
-];
+import { useAuthStore } from '@/lib/store/useAuthStore';
+import { DBAppointment } from '@/lib/db';
 
 const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
   confirmed: { bg: 'var(--color-accent-light)', text: '#065F46', label: 'Confirmed' },
@@ -25,14 +16,52 @@ const statusConfig: Record<string, { bg: string; text: string; label: string }> 
 const TABS = ['Schedule', 'Patients', 'Notes', 'Analytics'];
 
 export default function TherapistDashboard() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('Schedule');
-  const [selectedSession, setSelectedSession] = useState<typeof todaySchedule[0] | null>(null);
+  const [selectedSession, setSelectedSession] = useState<DBAppointment | null>(null);
   const [noteText, setNoteText] = useState('');
   const [mounted, setMounted] = useState(false);
+  const [appointments, setAppointments] = useState<DBAppointment[]>([]);
+
+  const specialist = user || SPECIALISTS[0]; // Fallback if not logged in for demo
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch('/api/appointments', {
+          headers: {
+            'Authorization': `Bearer ${user?.token || ''}`,
+          }
+        });
+        const data = await res.json();
+        if (data.success && data.appointments) {
+          // Sort by date and time (rough sort for demo)
+          const sorted = data.appointments.sort((a: DBAppointment, b: DBAppointment) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            return a.timeSlot.localeCompare(b.timeSlot);
+          });
+          setAppointments(sorted);
+        }
+      } catch (err) {
+        console.error('Failed to fetch appointments:', err);
+      }
+    };
+
+    fetchAppointments();
+    
+    // Poll for real-time updates
+    const interval = setInterval(fetchAppointments, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleJoinCall = (appointmentId: string) => {
+    router.push(`/meet/${appointmentId}`);
+  };
 
   return (
     <div style={{ background: '#FAFBFF', minHeight: '100vh' }}>
@@ -41,11 +70,13 @@ export default function TherapistDashboard() {
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-              <img src={specialist.image} alt={specialist.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)' }} />
+              <img src={specialist.avatar || specialist.image || 'https://images.unsplash.com/photo-1594824813620-21a50a6bf1cf?w=400&q=80'} alt={specialist.name || specialist.firstName} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)' }} />
               <div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, margin: '0 0 4px', fontWeight: 600 }}>Therapist Dashboard</p>
-                <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>{specialist.name}</h1>
-                <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0', fontSize: 13 }}>{specialist.qualifications}</p>
+                <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.03em' }}>
+                  {specialist.firstName ? `Dr. ${specialist.firstName} ${specialist.lastName}` : specialist.name}
+                </h1>
+                <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0 0', fontSize: 13 }}>{specialist.qualifications || 'Senior Physiotherapist'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -56,10 +87,10 @@ export default function TherapistDashboard() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginTop: 28 }}>
             {[
-              { icon: '👥', label: "Today's Patients", value: '6' },
-              { icon: '✅', label: 'Sessions Done', value: '1' },
-              { icon: '⏳', label: 'Remaining', value: '5' },
-              { icon: '💰', label: "Today's Revenue", value: '₹7,400' },
+              { icon: '👥', label: "Today's Patients", value: appointments.length.toString() },
+              { icon: '✅', label: 'Sessions Done', value: appointments.filter(a => a.status === 'completed').length.toString() },
+              { icon: '⏳', label: 'Remaining', value: appointments.filter(a => a.status === 'confirmed').length.toString() },
+              { icon: '💰', label: "Total Revenue", value: formatPrice(appointments.reduce((sum, a) => sum + (a.totalAmount || 0), 0)) },
             ].map(s => (
               <div key={s.label} style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', borderRadius: 14, padding: '16px 20px', border: '1px solid rgba(255,255,255,0.15)' }}>
                 <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
@@ -88,27 +119,30 @@ export default function TherapistDashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
             {/* Schedule list */}
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D1421', margin: '0 0 14px' }}>Today's Schedule</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D1421', margin: '0 0 14px' }}>Appointments Schedule</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {todaySchedule.map(session => {
-                  const sc = statusConfig[session.status];
+                {appointments.length === 0 && (
+                  <div style={{ padding: '20px', textAlign: 'center', color: '#6B7280' }}>
+                    No appointments booked yet.
+                  </div>
+                )}
+                {appointments.map(session => {
+                  const sc = statusConfig[session.status] || statusConfig.pending;
                   return (
                     <div key={session.id} onClick={() => setSelectedSession(session)} style={{
                       background: '#fff', borderRadius: 16, border: `2px solid ${selectedSession?.id === session.id ? 'var(--color-primary)' : '#E8ECF4'}`,
-                      padding: '14px 18px', cursor: session.status !== 'break' ? 'pointer' : 'default',
+                      padding: '14px 18px', cursor: 'pointer',
                       boxShadow: selectedSession?.id === session.id ? '0 4px 20px rgba(30,111,255,0.12)' : 'none',
                       display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.2s',
                     }}>
                       <div style={{ width: 64, textAlign: 'center', flexShrink: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: session.status === 'break' ? '#9CA3AF' : '#0D1421' }}>{session.time}</div>
-                        <div style={{ fontSize: 10, color: '#8896A8' }}>{session.duration}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#0D1421' }}>{session.timeSlot}</div>
+                        <div style={{ fontSize: 10, color: '#8896A8' }}>{session.date}</div>
                       </div>
-                      <div style={{ width: 3, height: 36, background: session.status === 'break' ? '#F3F4F6' : session.status === 'in-progress' ? 'var(--color-primary)' : session.status === 'confirmed' ? 'var(--color-accent)' : '#F59E0B', borderRadius: 99, flexShrink: 0 }} />
+                      <div style={{ width: 3, height: 36, background: session.status === 'confirmed' ? 'var(--color-accent)' : '#F59E0B', borderRadius: 99, flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: session.status === 'break' ? '#9CA3AF' : '#0D1421', marginBottom: 2 }}>{session.patient}</div>
-                        {session.status !== 'break' && (
-                          <div style={{ fontSize: 11, color: '#6B7280' }}>{session.treatment} · {session.type} · {session.room}</div>
-                        )}
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1421', marginBottom: 2 }}>{session.patientName}</div>
+                        <div style={{ fontSize: 11, color: '#6B7280' }}>{session.treatmentName} · {session.appointmentType}</div>
                       </div>
                       <span style={{ background: sc.bg, color: sc.text, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, flexShrink: 0 }}>{sc.label}</span>
                     </div>
@@ -118,19 +152,29 @@ export default function TherapistDashboard() {
             </div>
             {/* Session detail panel */}
             <div>
-              {selectedSession && selectedSession.status !== 'break' ? (
+              {selectedSession ? (
                 <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #E8ECF4', padding: 24, position: 'sticky', top: 80 }}>
                   <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0D1421', marginBottom: 4 }}>{selectedSession.patient}</div>
-                    <div style={{ fontSize: 12, color: '#6B7280' }}>{selectedSession.treatment} · {selectedSession.type}</div>
-                    <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>🕐 {selectedSession.time} · 📍 {selectedSession.room}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: '#0D1421', marginBottom: 4 }}>{selectedSession.patientName}</div>
+                    <div style={{ fontSize: 12, color: '#6B7280' }}>{selectedSession.treatmentName} · {selectedSession.appointmentType}</div>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>🕐 {selectedSession.timeSlot} on {selectedSession.date}</div>
                   </div>
+                  
+                  {/* Join Video Call Button for Online Consultations */}
+                  <div style={{ marginBottom: 20 }}>
+                    <button 
+                      onClick={() => handleJoinCall(selectedSession.id)}
+                      style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: '#1E6FFF', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(30,111,255,0.3)' }}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                      Join Video Call
+                    </button>
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
                     {[
-                      { label: 'Last Session Pain', val: '6/10', color: '#F59E0B' },
-                      { label: 'Last Session Mobility', val: '55%', color: 'var(--color-accent)' },
-                      { label: 'Sessions Completed', val: '2', color: 'var(--color-primary)' },
-                      { label: 'Recovery Progress', val: '35%', color: '#7C3AED' },
+                      { label: 'Pain Level', val: `${selectedSession.painLevel}/10`, color: '#F59E0B' },
+                      { label: 'Pain Duration', val: selectedSession.painDuration, color: 'var(--color-accent)' },
                     ].map(s => (
                       <div key={s.label} style={{ background: '#F8FAFF', borderRadius: 12, padding: '10px 12px' }}>
                         <div style={{ fontSize: 9, color: '#8896A8', fontWeight: 700, marginBottom: 3 }}>{s.label}</div>
@@ -151,7 +195,7 @@ export default function TherapistDashboard() {
               ) : (
                 <div style={{ background: '#F8FAFF', borderRadius: 20, border: '2px dashed #E8ECF4', padding: 40, textAlign: 'center' }}>
                   <div style={{ fontSize: 36, marginBottom: 12 }}>👆</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#8896A8' }}>Select a session to view details and add notes</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#8896A8' }}>Select an appointment to view details</div>
                 </div>
               )}
             </div>
@@ -162,21 +206,21 @@ export default function TherapistDashboard() {
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D1421', margin: '0 0 16px' }}>Patient Profiles</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
-              {todaySchedule.filter(s => s.status !== 'break').map(session => (
+              {appointments.map(session => (
                 <div key={session.id} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E8ECF4', padding: 20 }}>
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 14 }}>
                     <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', fontWeight: 800 }}>
-                      {session.patient[0]}
+                      {session.patientName[0]}
                     </div>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1421' }}>{session.patient}</div>
-                      <div style={{ fontSize: 11, color: '#8896A8' }}>{session.treatment}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1421' }}>{session.patientName}</div>
+                      <div style={{ fontSize: 11, color: '#8896A8' }}>{session.treatmentName}</div>
                     </div>
                   </div>
                   {[
-                    { l: 'Appointment', v: `${session.time} · ${session.type}` },
-                    { l: 'Duration', v: session.duration },
-                    { l: 'Room', v: session.room },
+                    { l: 'Appointment', v: `${session.date} at ${session.timeSlot}` },
+                    { l: 'Type', v: session.appointmentType },
+                    { l: 'Status', v: session.status },
                   ].map(r => (
                     <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F9FAFB', fontSize: 12 }}>
                       <span style={{ color: '#8896A8', fontWeight: 600 }}>{r.l}</span>
@@ -198,40 +242,14 @@ export default function TherapistDashboard() {
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D1421', margin: '0 0 16px' }}>My Performance Analytics</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 16, marginBottom: 24 }}>
               {[
-                { label: 'Total Patients', val: '127', icon: '👥', color: 'var(--color-primary)', trend: '+12%' },
-                { label: 'Avg Rating', val: '4.9★', icon: '⭐', color: '#F59E0B', trend: 'Excellent' },
-                { label: 'Sessions This Month', val: '48', icon: '📅', color: 'var(--color-accent)', trend: '+8 vs last month' },
-                { label: 'Recovery Rate', val: '87%', icon: '📈', color: '#7C3AED', trend: 'Above average' },
+                { label: 'Total Appointments', val: appointments.length.toString(), icon: '📅', color: 'var(--color-primary)', trend: 'This period' },
+                { label: 'Revenue Generated', val: formatPrice(appointments.reduce((sum, a) => sum + (a.totalAmount || 0), 0)), icon: '💰', color: '#F59E0B', trend: 'Total' },
               ].map(s => (
                 <div key={s.label} style={{ background: '#fff', borderRadius: 18, border: '1px solid #E8ECF4', padding: 20 }}>
                   <div style={{ fontSize: 24, marginBottom: 8 }}>{s.icon}</div>
                   <div style={{ fontSize: 24, fontWeight: 800, color: s.color, marginBottom: 4 }}>{s.val}</div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: '#4A5568' }}>{s.label}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-accent)', marginTop: 4, fontWeight: 600 }}>{s.trend}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #E8ECF4', padding: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1421', marginBottom: 20 }}>Patient Satisfaction by Treatment</div>
-              {[
-                { treatment: 'Back Pain Therapy', patients: 42, rating: 4.9, recovery: 85 },
-                { treatment: 'Knee Rehabilitation', patients: 31, rating: 4.8, recovery: 82 },
-                { treatment: 'Post-Surgery Rehab', patients: 28, rating: 5.0, recovery: 91 },
-                { treatment: 'ACL Rehabilitation', patients: 26, rating: 4.9, recovery: 88 },
-              ].map(t => (
-                <div key={t.treatment} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid #F9FAFB' }}>
-                  <div style={{ flex: 2, fontSize: 13, fontWeight: 600, color: '#0D1421' }}>{t.treatment}</div>
-                  <div style={{ flex: 1, fontSize: 12, color: '#8896A8' }}>{t.patients} patients</div>
-                  <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#F59E0B' }}>⭐ {t.rating}</div>
-                  <div style={{ flex: 2 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
-                      <span style={{ color: '#8896A8' }}>Recovery Rate</span>
-                      <span style={{ fontWeight: 700, color: 'var(--color-accent)' }}>{t.recovery}%</span>
-                    </div>
-                    <div style={{ height: 6, background: '#F1F5F9', borderRadius: 99 }}>
-                      <div style={{ height: '100%', width: `${t.recovery}%`, background: 'linear-gradient(90deg,var(--color-primary),var(--color-accent))', borderRadius: 99 }} />
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>

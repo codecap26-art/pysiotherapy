@@ -1,14 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverDb } from '@/lib/serverDb';
 import { supabase } from '@/lib/supabase';
+import { getAuthUser } from '@/lib/tokenParser';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const patientId = searchParams.get('patientId') || undefined;
-    const specialistId = searchParams.get('specialistId') || undefined;
+    const authUser = getAuthUser(req);
 
-    const appointments = serverDb.getAppointments({ patientId, specialistId });
+    if (!authUser) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized. Please log in.' },
+        { status: 401 }
+      );
+    }
+
+    const { userId, role } = authUser;
+    
+    let query = supabase.from('appointments').select('*').order('date', { ascending: false });
+
+    if (role === 'therapist' || role === 'doctor') {
+      query = query.eq('specialist_id', userId);
+    } else if (role === 'patient') {
+      query = query.eq('patient_id', userId);
+    }
+
+    const { data: rawAppointments, error } = await query;
+    
+    if (error) {
+       console.error("Supabase API Error:", error);
+       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    const appointments = (rawAppointments || []).map((apt: any) => ({
+      id: apt.id,
+      bookingRef: apt.booking_ref,
+      patientId: apt.patient_id,
+      patientName: apt.patient_name,
+      patientEmail: apt.patient_email,
+      patientPhone: apt.patient_phone,
+      specialistId: apt.specialist_id,
+      specialistName: apt.specialist_name,
+      treatmentId: apt.treatment_id,
+      treatmentName: apt.treatment_name,
+      clinicId: apt.clinic_id,
+      clinicName: apt.clinic_name,
+      date: apt.date,
+      timeSlot: apt.time_slot,
+      painLevel: apt.pain_level,
+      painArea: apt.pain_area,
+      medicalNotes: apt.medical_notes,
+      totalAmount: apt.total_amount,
+      status: apt.status,
+      createdAt: apt.created_at,
+      updatedAt: apt.updated_at,
+    }));
 
     return NextResponse.json({
       success: true,
@@ -21,127 +65,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const {
-      patientId,
-      patientName,
-      patientPhone,
-      patientEmail,
-      patientAge,
-      patientGender,
-      specialistId,
-      specialistName,
-      specialistTitle,
-      specialistImage,
-      treatmentId,
-      treatmentName,
-      treatmentCategory,
-      clinicId,
-      clinicName,
-      clinicAddress,
-      date,
-      timeSlot,
-      fee,
-      tax,
-      totalAmount,
-      appointmentType,
-      painLevel,
-      painDuration,
-      reasonForVisit,
-      notes,
-    } = body;
-
-    if (!patientName || !treatmentName || !date || !timeSlot) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required appointment fields (patientName, treatmentName, date, timeSlot)' },
-        { status: 400 }
-      );
-    }
-
-    const saved = serverDb.addAppointment({
-      patientId: patientId || `usr-${Date.now()}`,
-      patientName,
-      patientPhone: patientPhone || '',
-      patientEmail: patientEmail || '',
-      patientAge: Number(patientAge) || 30,
-      patientGender: patientGender || 'prefer-not-to-say',
-      specialistId: specialistId || 'sarah-jenkins',
-      specialistName: specialistName || 'Dr. Sarah Jenkins',
-      specialistTitle: specialistTitle || 'Senior Physiotherapist',
-      specialistImage: specialistImage || 'https://images.unsplash.com/photo-1594824813620-21a50a6bf1cf?auto=format&fit=crop&q=80&w=400',
-      treatmentId: treatmentId || 'general-pt',
-      treatmentName,
-      treatmentCategory: treatmentCategory || 'Physical Therapy',
-      clinicId: clinicId || 'clinic-indiranagar',
-      clinicName: clinicName || 'Indiranagar Flagship Centre',
-      clinicAddress: clinicAddress || 'Indiranagar, Bangalore',
-      date,
-      timeSlot,
-      status: 'confirmed',
-      fee: Number(fee) || 1500,
-      tax: Number(tax) || 270,
-      totalAmount: Number(totalAmount) || 1770,
-      appointmentType: appointmentType || 'in-clinic',
-      painLevel: Number(painLevel) || 5,
-      painDuration: painDuration || '1 - 3 months',
-      reasonForVisit: reasonForVisit || '',
-      notes: notes || '',
-    });
-
-    // 1. Sync to Supabase if configured
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const isSupabaseConfigured =
-      supabaseUrl &&
-      supabaseKey &&
-      !supabaseUrl.includes('your-project-id') &&
-      !supabaseKey.includes('your-anon');
-
-    if (isSupabaseConfigured) {
-      try {
-        await supabase.from('appointments').insert([
-          {
-            id: saved.id,
-            booking_ref: saved.bookingRef,
-            patient_id: saved.patientId,
-            patient_name: saved.patientName,
-            patient_email: saved.patientEmail,
-            patient_phone: saved.patientPhone,
-            specialist_id: saved.specialistId,
-            specialist_name: saved.specialistName,
-            treatment_id: saved.treatmentId,
-            treatment_name: saved.treatmentName,
-            clinic_id: saved.clinicId,
-            clinic_name: saved.clinicName,
-            date: saved.date,
-            time_slot: saved.timeSlot,
-            pain_level: saved.painLevel,
-            pain_area: saved.reasonForVisit,
-            medical_notes: saved.notes,
-            total_amount: saved.totalAmount,
-            status: saved.status,
-          },
-        ]);
-      } catch (e) {
-        console.warn('Supabase appointment sync skipped:', e);
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      appointment: saved,
-      message: 'Appointment successfully created and persisted in database.',
-    });
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
-  }
-}
-
 export async function PATCH(req: NextRequest) {
   try {
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const { id, status } = body;
 
@@ -149,16 +79,32 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Appointment ID and status are required' }, { status: 400 });
     }
 
-    const updated = serverDb.updateAppointmentStatus(id, status);
-    if (!updated) {
+    const { data: appointment } = await supabase.from('appointments').select('*').eq('id', id).single();
+    if (!appointment) {
       return NextResponse.json({ success: false, error: 'Appointment not found' }, { status: 404 });
     }
 
-    // Sync to Supabase
-    try {
-      await supabase.from('appointments').update({ status }).eq('id', id);
-    } catch {
-      /* ignore */
+    const isOwner = appointment.patient_id === authUser.userId;
+    const isDoctor = authUser.role === 'therapist' || authUser.role === 'doctor';
+    const isAdmin = authUser.role === 'admin';
+    const isAssignedDoctor = isDoctor && appointment.specialist_id === authUser.userId;
+
+    if (!isOwner && !isAdmin && !isAssignedDoctor) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden. You do not have access to this appointment.' },
+        { status: 403 }
+      );
+    }
+
+    const { data: updated, error } = await supabase
+      .from('appointments')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({

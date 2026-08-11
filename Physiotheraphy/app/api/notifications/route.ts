@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverDb } from '@/lib/serverDb';
+import { supabase } from '@/lib/supabase';
+import { getAuthUser } from '@/lib/tokenParser';
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const notifications = serverDb.getNotifications(userId);
+    const { data: notifications, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', authUser.userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      notifications,
-      total: notifications.length,
+      notifications: notifications || [],
+      unreadCount: notifications?.filter(n => !n.read).length || 0,
     });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -25,16 +32,34 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { id } = body;
-
-    if (!id) {
-      return NextResponse.json({ success: false, error: 'Notification ID is required' }, { status: 400 });
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const success = serverDb.markNotificationAsRead(id);
+    const body = await req.json();
+    const { action, id } = body;
 
-    return NextResponse.json({ success });
+    if (action === 'mark-all-read') {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', authUser.userId);
+        
+      return NextResponse.json({ success: true });
+    }
+
+    if (id) {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id)
+        .eq('user_id', authUser.userId); // ensure ownership
+        
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });

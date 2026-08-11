@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { DBAppointment } from '@/lib/db';
-import { saveAppointment } from '@/lib/supabaseService';
 import { TREATMENTS, SPECIALISTS } from '@/lib/bookingData';
 import { CLINIC_BRANCHES } from '@/lib/clinicData';
+import { getAuthHeaders } from '@/lib/authHeaders';
 
 export type BookingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -92,46 +92,41 @@ export const useBookingStore = create<BookingState>()(
           return null;
         }
 
-        const treatment = TREATMENTS.find((t) => t.id === state.treatmentId);
-        const specialist = SPECIALISTS.find((s) => s.id === state.specialistId);
-        const clinic = CLINIC_BRANCHES.find((c) => c.id === state.clinicId);
-
-        const fee = treatment?.startingPrice || 1500;
+        const fee = 1500; // Will be derived dynamically in real app, assuming 1500 for now or fetch base fee
         const tax = Math.round(fee * 0.18);
         const totalAmount = fee + tax;
+        const refNum = Math.floor(10000 + Math.random() * 90000);
 
-        const newAppointment = await saveAppointment({
-          patientId: patientUser?.id || 'usr-guest',
-          patientName: `${patientUser?.firstName || 'Patient'} ${patientUser?.lastName || ''}`.trim(),
-          patientPhone: patientUser?.phone || '+91 98765 00000',
-          patientEmail: patientUser?.email || 'patient@example.com',
-          patientAge: patientUser?.age || 30,
-          patientGender: patientUser?.gender || 'prefer-not-to-say',
-          specialistId: specialist?.id || state.specialistId,
-          specialistName: specialist?.name || 'Dr. Sarah Jenkins',
-          specialistTitle: specialist?.title || 'Physiotherapist',
-          specialistImage: specialist?.image || '',
-          treatmentId: treatment?.id || state.treatmentId,
-          treatmentName: treatment?.name || 'Physiotherapy Consultation',
-          treatmentCategory: state.categoryId || 'General Physiotherapy',
-          clinicId: clinic?.id || state.clinicId,
-          clinicName: clinic?.name || 'Healing Motion Centre',
-          clinicAddress: clinic?.address || 'Bengaluru',
-          date: state.date,
-          timeSlot: state.timeSlot,
-          status: 'confirmed',
-          fee,
-          tax,
-          totalAmount,
-          appointmentType: state.appointmentType,
-          painLevel: state.painLevel,
-          painDuration: state.painDuration,
-          reasonForVisit: state.reasonForVisit || 'General physiotherapy consultation',
-          notes: state.notes,
-        });
+        try {
+          const appointmentData = {
+            id: `apt-${Date.now()}`,
+            booking_ref: `HM-2026-${refNum}`,
+            patient_id: patientUser.id,
+            specialist_id: state.specialistId,
+            treatment_id: state.treatmentId,
+            clinic_id: state.clinicId,
+            date: state.date,
+            time_slot: state.timeSlot,
+            pain_level: state.painLevel,
+            pain_area: state.reasonForVisit,
+            medical_notes: state.notes,
+            total_amount: totalAmount,
+            status: 'confirmed'
+          };
 
-        set({ confirmedBooking: newAppointment });
-        return newAppointment;
+          // Use the appointment service which also ensures a patient_treatment link
+          const { createAppointment } = await import('@/lib/services/appointmentService');
+          const savedAppointment = await createAppointment(appointmentData);
+
+          if (savedAppointment) {
+             set({ confirmedBooking: savedAppointment });
+             return savedAppointment;
+          }
+        } catch (err) {
+          console.error('Booking error:', err);
+        }
+
+        return null;
       },
 
       resetBooking: () =>

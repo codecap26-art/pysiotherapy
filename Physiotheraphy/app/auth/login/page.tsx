@@ -35,12 +35,14 @@ export default function LoginPage() {
 
   const processSuccessfulLogin = (user: any, token: string) => {
     login(user, token);
-    if (redirectAfterLogin) {
-      router.push(redirectAfterLogin);
-    } else if (user.role === 'therapist') {
-      router.push('/dashboard/therapist');
+
+    // If it's a doctor/therapist, ALWAYS go to therapist dashboard regardless of redirect intent
+    if (user.role === 'therapist' || user.role === 'doctor') {
+      router.push('/therapist');
     } else if (user.role === 'admin') {
       router.push('/admin');
+    } else if (redirectAfterLogin) {
+      router.push(redirectAfterLogin);
     } else {
       router.push('/dashboard');
     }

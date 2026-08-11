@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverDb } from '@/lib/serverDb';
-import { generateToken, User } from '@/lib/authData';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
@@ -17,86 +15,89 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // 1. Try Supabase Auth if credentials configured
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const isSupabaseConfigured =
-      supabaseUrl &&
-      supabaseKey &&
-      !supabaseUrl.includes('your-project-id') &&
-      !supabaseKey.includes('your-anon');
+    // DEMO BYPASS: If they use a demo password, bypass Supabase Auth and just fetch their profile
+    let finalUserId = '';
+    let finalToken = '';
 
-    if (isSupabaseConfigured) {
-      try {
-        const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password: password,
-        });
-
-        if (!supaErr && supaAuth.user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', normalizedEmail)
-            .maybeSingle();
-
-          const supaUserObj: User = {
-            id: supaAuth.user.id,
-            email: supaAuth.user.email || normalizedEmail,
-            firstName: profile?.first_name || supaAuth.user.user_metadata?.first_name || 'User',
-            lastName: profile?.last_name || supaAuth.user.user_metadata?.last_name || '',
-            phone: profile?.phone || supaAuth.user.user_metadata?.phone || '',
-            age: profile?.age || 30,
-            gender: profile?.gender || 'prefer-not-to-say',
-            avatar: profile?.avatar_url || '',
-            role: (profile?.role || supaAuth.user.user_metadata?.role || 'patient') as 'patient' | 'therapist' | 'admin',
-            emergencyContact: '',
-            medicalConditions: '',
-            allergies: '',
-            preferredLanguage: 'English',
-            createdAt: supaAuth.user.created_at || new Date().toISOString(),
-            emailVerified: true,
-          };
-
-          // Save to local server DB as well for cache/sync
-          serverDb.addUser(supaUserObj);
-
-          const token = supaAuth.session?.access_token || generateToken(supaUserObj);
-          return NextResponse.json({
-            success: true,
-            user: supaUserObj,
-            token,
-          });
-        }
-      } catch (e) {
-        console.warn('Supabase login check skipped:', e);
+    const isDemoPassword = ['Demo@1234', 'Doctor@1234', 'Admin@1234'].includes(password);
+    
+    if (isDemoPassword) {
+      // For demo, just find the user by email in public.users
+      const { data: demoUser, error: demoErr } = await supabase
+        .from('users')
+        .select('id, role, first_name, last_name')
+        .eq('email', normalizedEmail)
+        .single();
+        
+      if (demoErr || !demoUser) {
+        return NextResponse.json(
+          { success: false, error: 'Demo user not found in database.' },
+          { status: 404 }
+        );
       }
+      
+      finalUserId = demoUser.id;
+      // Generate a simple mock JWT so tokenParser.ts can read it
+      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const payload = btoa(
+        JSON.stringify({
+          sub: demoUser.id,
+          email: normalizedEmail,
+          name: `${demoUser.first_name} ${demoUser.last_name}`,
+          role: demoUser.role,
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+        })
+      );
+      finalToken = `${header}.${payload}.mock_signature_${demoUser.id}`;
+      
+    } else {
+      // STANDARD SUPABASE AUTH
+      const { data: supaAuth, error: supaErr } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: password,
+      });
+
+      if (supaErr || !supaAuth.user) {
+         return NextResponse.json(
+          { success: false, error: supaErr?.message || 'Invalid login credentials.' },
+          { status: 401 }
+        );
+      }
+      finalUserId = supaAuth.user.id;
+      finalToken = supaAuth.session?.access_token || '';
     }
 
-    // 2. Authenticate against Server Database
-    const user = serverDb.findUserByEmail(normalizedEmail);
+    const { data: profile } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', finalUserId)
+      .single();
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'No account found with this email address. Please register first.' },
+    if (!profile) {
+       return NextResponse.json(
+        { success: false, error: 'User profile not found in database.' },
         { status: 404 }
       );
     }
 
-    if (user.password && user.password !== password) {
-      return NextResponse.json(
-        { success: false, error: 'Incorrect password. Please verify your credentials and try again.' },
-        { status: 401 }
-      );
-    }
-
-    const { password: _, ...safeUser } = user;
-    const token = generateToken(safeUser as User);
+    const userObj = {
+      id: profile.id,
+      email: profile.email,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      phone: profile.phone || '',
+      age: profile.age || 30,
+      gender: profile.gender || 'prefer-not-to-say',
+      avatar: profile.avatar_url || '',
+      role: profile.role,
+      createdAt: profile.created_at,
+    };
 
     return NextResponse.json({
       success: true,
-      user: safeUser,
-      token,
+      user: userObj,
+      token: finalToken,
     });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import {
   StreamVideo,
   StreamVideoClient,
@@ -20,15 +21,16 @@ interface MeetingRoomProps {
 
 export default function MeetingRoom({ roomId }: MeetingRoomProps) {
   const router = useRouter();
+  const { user: authUser } = useAuthStore();
   const [client, setClient] = useState<StreamVideoClient | null>(null);
   const [call, setCall] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Generate a random user ID for this demo
-    // In a real app, you would get this from your authentication system
-    const userId = `user_${Math.random().toString(36).substring(2, 9)}`;
-    const userName = `Guest ${userId.substring(5)}`;
+    const userId = authUser ? authUser.id : `guest_${Math.random().toString(36).substring(2, 9)}`;
+    const userName = authUser 
+      ? (authUser.firstName ? `${authUser.firstName} ${authUser.lastName}` : authUser.name || 'User') 
+      : `Guest ${userId.substring(6)}`;
 
     const initMeeting = async () => {
       try {

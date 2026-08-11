@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { serverDb } from '@/lib/serverDb';
-import { generateToken, User } from '@/lib/authData';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
@@ -17,101 +15,74 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check if user already exists in server database
-    const existing = serverDb.findUserByEmail(normalizedEmail);
-    if (existing) {
-      return NextResponse.json(
-        { success: false, error: 'An account with this email address already exists. Please log in.' },
-        { status: 409 }
+    // 1. Create user in Supabase Auth
+    const { data: supaUser, error: supaErr } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password: password,
+      options: {
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone ? phone.trim() : '',
+          role: role || 'patient',
+        },
+      },
+    });
+
+    if (supaErr || !supaUser.user) {
+       return NextResponse.json(
+        { success: false, error: supaErr?.message || 'Registration failed.' },
+        { status: 400 }
       );
     }
 
-    const userId = `usr-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-    const userRole = role || 'patient';
+    // 2. Insert into public.users table
+    const { error: insertErr } = await supabase.from('users').upsert([
+      {
+        id: supaUser.user.id,
+        email: normalizedEmail,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone ? phone.trim() : null,
+        age: Number(age) || null,
+        gender: gender || null,
+        role: role || 'patient',
+      },
+    ]);
 
-    const newUser: User & { password: string } = {
-      id: userId,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: normalizedEmail,
-      phone: phone ? phone.trim() : '',
-      age: Number(age) || 30,
-      gender: gender || 'prefer-not-to-say',
-      avatar: '',
-      role: userRole,
-      emergencyContact: '',
-      medicalConditions: '',
-      allergies: '',
-      preferredLanguage: 'English',
-      createdAt: new Date().toISOString(),
-      emailVerified: true,
-      password: password,
-    };
-
-    // 1. Try syncing with Supabase Auth & public.users table if active
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    const isSupabaseConfigured =
-      supabaseUrl &&
-      supabaseKey &&
-      !supabaseUrl.includes('your-project-id') &&
-      !supabaseKey.includes('your-anon');
-
-    if (isSupabaseConfigured) {
-      try {
-        const { data: supaUser, error: supaErr } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password: password,
-          options: {
-            data: {
-              first_name: newUser.firstName,
-              last_name: newUser.lastName,
-              phone: newUser.phone,
-              role: newUser.role,
-            },
-          },
-        });
-
-        if (!supaErr && supaUser.user) {
-          newUser.id = supaUser.user.id;
-          await supabase.from('users').upsert([
-            {
-              id: supaUser.user.id,
-              email: normalizedEmail,
-              first_name: newUser.firstName,
-              last_name: newUser.lastName,
-              phone: newUser.phone,
-              age: newUser.age,
-              gender: newUser.gender,
-              role: newUser.role,
-            },
-          ]);
-        }
-      } catch (e) {
-        console.warn('Supabase sync skipped during registration:', e);
-      }
+    if (insertErr) {
+       console.error("Error inserting user profile:", insertErr);
     }
 
-    // 2. Persist in Server Database
-    const safeUser = serverDb.addUser(newUser);
-
     // 3. Welcome Notification
-    serverDb.addNotification({
-      userId: safeUser.id,
+    await supabase.from('notifications').insert({
+      id: `notif-${Date.now()}`,
+      user_id: supaUser.user.id,
       title: 'Welcome to Healing Motion!',
-      message: `Welcome, ${safeUser.firstName}! Your account has been registered in the database. You can now book physiotherapy consultations.`,
+      message: `Welcome, ${firstName}! Your account has been registered.`,
       type: 'system',
       link: '/dashboard',
       read: false,
     });
 
-    const token = generateToken(safeUser);
+    const userObj = {
+      id: supaUser.user.id,
+      email: normalizedEmail,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone ? phone.trim() : '',
+      age: Number(age) || null,
+      gender: gender || 'prefer-not-to-say',
+      avatar: '',
+      role: role || 'patient',
+      createdAt: new Date().toISOString(),
+    };
 
     return NextResponse.json({
       success: true,
-      user: safeUser,
-      token,
-      message: 'Account created and saved in database successfully.',
+      user: userObj,
+      token: supaUser.session?.access_token || 'pending_verification',
+      message: 'Account created successfully.',
     });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);

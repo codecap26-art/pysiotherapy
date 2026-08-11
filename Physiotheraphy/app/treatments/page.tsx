@@ -426,20 +426,12 @@ function TreatmentCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-1.5 pt-2">
-          <button
-            type="button"
-            onClick={() => onOpenModal(t)}
+        <div className="grid grid-cols-2 gap-1.5 pt-2">
+          <Link
+            href={`/treatments/${t.id}`}
             className="py-2.5 px-2 bg-[#F8FAFC] border border-[#E2E8F0] text-[#0D1421] text-xs font-bold rounded-xl hover:bg-[#EFF5FF] hover:text-[#1E6FFF] hover:border-[#1E6FFF]/30 transition-colors flex items-center justify-center gap-1"
           >
             <Info className="w-3.5 h-3.5" /> Details
-          </button>
-          
-          <Link
-            href={`/treatments/${t.id}`}
-            className="py-2.5 px-2 bg-[#EFF5FF] border border-[#D0E2FF] text-[#1E6FFF] text-xs font-bold rounded-xl hover:bg-[#1E6FFF] hover:text-white transition-all flex items-center justify-center gap-1"
-          >
-            <ExternalLink className="w-3.5 h-3.5" /> Full Page
           </Link>
 
           <Link
@@ -1316,11 +1308,7 @@ export default function TreatmentsPage() {
         onOpenModal={setModalTreatment}
       />
       <WhyPhysioSection />
-      <ConditionsSection onSelectCondition={handleSelectCondition} />
-      <SpecialistsSection />
       <TestimonialsSection />
-      <FAQSection />
-      <CTASection />
 
       {/* Interactive Detail Modal */}
       <TreatmentModal

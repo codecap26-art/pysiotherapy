@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '@/lib/store/useBookingStore';
 import { Sun, CloudSun, Moon, Clock, Check } from 'lucide-react';
@@ -30,7 +30,38 @@ const TIME_PERIODS = [
 ];
 
 export default function Step6TimeSlot() {
-  const { timeSlot: selectedSlot, setTimeSlot, date } = useBookingStore();
+  const { timeSlot: selectedSlot, setTimeSlot, date, specialistId } = useBookingStore();
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!date || !specialistId) return;
+
+    const fetchAvailability = async () => {
+      try {
+        const res = await fetch(`/api/appointments/availability?date=${date}&specialistId=${specialistId}`);
+        const data = await res.json();
+        if (data.success && data.bookedSlots) {
+          setBookedSlots(data.bookedSlots);
+          // If selected slot just got booked by someone else, reset selection
+          if (selectedSlot && data.bookedSlots.includes(selectedSlot)) {
+            setTimeSlot('');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch availability:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    fetchAvailability();
+
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(fetchAvailability, 5000);
+    return () => clearInterval(interval);
+  }, [date, specialistId, selectedSlot, setTimeSlot]);
 
   return (
     <motion.div
@@ -73,20 +104,24 @@ export default function Step6TimeSlot() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {period.slots.map((slot) => {
                   const isSelected = selectedSlot === slot;
+                  const isBooked = bookedSlots.includes(slot);
 
                   return (
                     <button
                       key={slot}
                       type="button"
-                      onClick={() => setTimeSlot(slot)}
-                      className={`group py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#1E6FFF] border-[#1E6FFF] text-white shadow-[0_4px_16px_rgba(30,111,255,0.3)]'
-                          : 'bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:bg-white text-[#0D1421]'
+                      disabled={isBooked}
+                      onClick={() => !isBooked && setTimeSlot(slot)}
+                      className={`group py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 font-bold text-xs sm:text-sm transition-all duration-200 ${
+                        isBooked
+                          ? 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                          : isSelected
+                          ? 'bg-[#1E6FFF] border-[#1E6FFF] text-white shadow-[0_4px_16px_rgba(30,111,255,0.3)] cursor-pointer'
+                          : 'bg-[#F8FAFC] border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:bg-white text-[#0D1421] cursor-pointer'
                       }`}
                     >
-                      <Clock className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-[#8896A8]'}`} />
-                      {slot}
+                      <Clock className={`w-4 h-4 ${isSelected ? 'text-white' : isBooked ? 'text-gray-300' : 'text-[#8896A8]'}`} />
+                      <span className={isBooked ? 'line-through' : ''}>{slot}</span>
                     </button>
                   );
                 })}

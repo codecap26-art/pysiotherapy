@@ -91,17 +91,21 @@ export default function Navbar() {
           }
         `}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+          {/* Logo — left corner */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#10B981] to-[#1E6FFF] flex items-center justify-center shadow-[0_2px_8px_rgba(30,111,255,0.4)]">
               <Activity className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-sm font-black tracking-tight text-[#0D1421] group-hover:text-[#1E6FFF] transition-colors">
+              <span className={`text-sm font-black tracking-tight transition-colors ${
+                scrolled ? 'text-[#0D1421] group-hover:text-[#1E6FFF]' : 'text-white group-hover:text-white/80'
+              }`}>
                 Healing Motion
               </span>
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#10B981]">Physiotherapy</span>
+              <span className={`text-[9px] font-semibold uppercase tracking-widest ${
+                scrolled ? 'text-[#10B981]' : 'text-emerald-300'
+              }`}>Physiotherapy</span>
             </div>
           </Link>
 
@@ -116,8 +120,10 @@ export default function Navbar() {
                   className={`
                     relative px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150
                     ${isActive
-                      ? 'text-[#1E6FFF]'
-                      : 'text-[#4A5568] hover:text-[#0D1421] hover:bg-[#F8FAFC]'
+                      ? scrolled ? 'text-[#1E6FFF]' : 'text-white'
+                      : scrolled
+                        ? 'text-[#4A5568] hover:text-[#0D1421] hover:bg-[#F8FAFC]'
+                        : 'text-white/85 hover:text-white hover:bg-white/10'
                     }
                   `}
                 >
@@ -125,7 +131,9 @@ export default function Navbar() {
                   {isActive && (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 bg-[#EFF5FF] rounded-lg -z-10"
+                      className={`absolute inset-0 rounded-lg -z-10 ${
+                        scrolled ? 'bg-[#EFF5FF]' : 'bg-white/15'
+                      }`}
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}

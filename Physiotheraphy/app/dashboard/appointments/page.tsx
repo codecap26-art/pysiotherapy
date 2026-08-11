@@ -3,15 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { db, DBAppointment } from '@/lib/db';
+import { DBAppointment } from '@/lib/db';
 import { formatPrice } from '@/lib/bookingData';
+import { getAuthHeaders } from '@/lib/authHeaders';
 import { 
   Calendar, Clock, MapPin, PlusCircle, RotateCcw, XCircle, 
   CheckCircle2, AlertCircle, FileText, ChevronRight, X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import { getAppointments } from '@/lib/supabaseService';
 
 export default function PatientAppointmentsPage() {
   const { user } = useAuthStore();
@@ -23,9 +22,19 @@ export default function PatientAppointmentsPage() {
   const [actionSuccess, setActionSuccess] = useState('');
 
   const refreshList = async () => {
-    if (user) {
-      const apts = await getAppointments(user.id);
-      setAppointments(apts);
+    if (!user) return;
+    try {
+      const res = await fetch('/api/appointments', {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.appointments)) {
+          setAppointments(json.appointments);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch appointments:', err);
     }
   };
 
@@ -35,11 +44,10 @@ export default function PatientAppointmentsPage() {
 
   const handleCancelAppointment = async (id: string) => {
     if (confirm('Are you sure you want to cancel this appointment?')) {
-      db.updateAppointmentStatus(id, 'cancelled');
       try {
         await fetch('/api/appointments', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ id, status: 'cancelled' }),
         });
       } catch {}
@@ -49,11 +57,18 @@ export default function PatientAppointmentsPage() {
     }
   };
 
-  const handleRescheduleSubmit = (e: React.FormEvent) => {
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedForReschedule || !newDate) return;
 
-    db.rescheduleAppointment(selectedForReschedule.id, newDate, newTime);
+    try {
+      await fetch('/api/appointments', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id: selectedForReschedule.id, status: 'rescheduled' }),
+      });
+    } catch {}
+
     setSelectedForReschedule(null);
     refreshList();
     setActionSuccess('Appointment rescheduled successfully.');
@@ -167,7 +182,7 @@ export default function PatientAppointmentsPage() {
                         {apt.status}
                       </span>
                       <span className="text-[11px] text-[#64748B]">
-                        • {apt.appointmentType.toUpperCase()}
+                        • {(apt.appointmentType || 'Consultation').toUpperCase()}
                       </span>
                     </div>
                     <h3 className="text-lg font-bold text-[#0D1421]">{apt.treatmentName}</h3>

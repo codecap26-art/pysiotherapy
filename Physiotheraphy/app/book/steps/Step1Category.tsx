@@ -9,7 +9,7 @@ import {
 
 export const TREATMENT_CATEGORIES = [
   {
-    id: 'orthopedic',
+    id: 'Orthopedic Rehabilitation',
     title: 'Orthopedic & Joint Care',
     desc: 'Targeted therapy for arthritis, joint pain, fractures, and pre/post-operative orthopedic recovery.',
     icon: Bone,
@@ -17,7 +17,7 @@ export const TREATMENT_CATEGORIES = [
     count: '6 treatments',
   },
   {
-    id: 'sports',
+    id: 'Sports Rehabilitation',
     title: 'Sports Rehabilitation',
     desc: 'High-performance recovery for ACL/meniscus injuries, rotator cuff tears, sprains, and athletic screening.',
     icon: Dumbbell,
@@ -25,7 +25,7 @@ export const TREATMENT_CATEGORIES = [
     count: '5 treatments',
   },
   {
-    id: 'spine',
+    id: 'Spine & Posture Care',
     title: 'Spine & Posture Care',
     desc: 'Specialized protocols for sciatica, herniated discs, chronic lower back pain, neck stiffness, and ergonomics.',
     icon: Activity,
@@ -33,7 +33,7 @@ export const TREATMENT_CATEGORIES = [
     count: '4 treatments',
   },
   {
-    id: 'neuro',
+    id: 'Neurological Rehabilitation',
     title: 'Neurological Rehabilitation',
     desc: 'Restorative neuromuscular therapy for stroke recovery, Parkinson’s, spinal cord conditions, and balance disorders.',
     icon: Brain,
@@ -41,7 +41,7 @@ export const TREATMENT_CATEGORIES = [
     count: '4 treatments',
   },
   {
-    id: 'geriatric',
+    id: 'Geriatric & Mobility Care',
     title: 'Geriatric & Mobility Care',
     desc: 'Gentle mobility, fall prevention, balance training, and functional independence for seniors.',
     icon: HeartHandshake,
@@ -49,7 +49,7 @@ export const TREATMENT_CATEGORIES = [
     count: '3 treatments',
   },
   {
-    id: 'pediatric',
+    id: 'Pediatric Physiotherapy',
     title: 'Pediatric Physiotherapy',
     desc: 'Developmental motor milestones, pediatric sports rehab, postural correction, and sensory integration.',
     icon: Baby,

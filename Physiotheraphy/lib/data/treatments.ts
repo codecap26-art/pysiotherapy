@@ -32,7 +32,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'Neck Pain Treatment',
     category: 'Physical Therapy',
     shortDescription: 'Comprehensive cervical rehabilitation using manual therapy, posture correction, mobility exercises, and strengthening programs.',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800', // physiotherapist stretching neck
+    image: '/images/neck_pain_treatment.png',
     successRate: 92,
     conditionDescription: 'Comprehensive cervical rehabilitation designed to relieve acute and chronic neck pain while restoring normal mobility.',
     symptoms: ['Neck stiffness', 'Headaches', 'Radiating arm pain'],
@@ -48,7 +48,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'ACL Rehabilitation',
     category: 'Post-Operative Rehabilitation',
     shortDescription: 'Progressive rehabilitation after ACL reconstruction focusing on knee stability, strength, balance, and return-to-sport readiness.',
-    image: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&q=80&w=800', // squat rehab
+    image: '/images/acl_rehabilitation.png',
     successRate: 88,
     conditionDescription: 'Structured post-surgical protocol to restore knee stability, strength, and function after an ACL reconstruction.',
     symptoms: ['Knee instability', 'Weakness', 'Loss of range of motion'],
@@ -64,7 +64,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'Tennis Elbow Treatment',
     category: 'Sports Injury',
     shortDescription: 'Evidence-based management for lateral epicondylitis using manual therapy, eccentric loading, and ergonomic correction.',
-    image: 'https://images.unsplash.com/photo-1629363447547-5264a274dbd2?auto=format&fit=crop&q=80&w=800', // elbow manual treatment
+    image: '/images/tennis_elbow.png',
     successRate: 90,
     conditionDescription: 'Evidence-based management for lateral epicondylitis (Tennis Elbow) focused on pain reduction and tissue healing.',
     symptoms: ['Outer elbow pain', 'Weak grip', 'Pain when lifting'],
@@ -80,7 +80,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'Frozen Shoulder Rehabilitation',
     category: 'Orthopedic Rehabilitation',
     shortDescription: 'Restore shoulder movement through joint mobilization, stretching, strengthening, and pain management.',
-    image: 'https://images.unsplash.com/photo-1599557456722-d7b884d5df67?auto=format&fit=crop&q=80&w=800', // shoulder mobility with bands
+    image: '/images/frozen_shoulder_rehabilitation.png',
     successRate: 85,
     conditionDescription: 'Targeted therapy to break down scar tissue and restore mobility in patients with adhesive capsulitis.',
     symptoms: ['Severe shoulder stiffness', 'Night pain', 'Limited arm movement'],
@@ -112,7 +112,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'Stroke Rehabilitation',
     category: 'Neurological Rehabilitation',
     shortDescription: 'Improve balance, coordination, mobility, muscle control, and independence following neurological injury.',
-    image: 'https://images.unsplash.com/photo-1632053001148-f002d1d07c08?auto=format&fit=crop&q=80&w=800', // walking parallel bars
+    image: '/images/stroke_rehabilitation.png',
     successRate: 82,
     conditionDescription: 'Specialized neuro-rehabilitation program designed to maximize neuroplasticity and restore functional independence after a stroke.',
     symptoms: ['Hemiparesis (weakness)', 'Loss of balance', 'Gait abnormalities'],
@@ -192,7 +192,7 @@ export const TREATMENTS: TreatmentData[] = [
     title: 'Hip Replacement Rehabilitation',
     category: 'Post-Operative Rehabilitation',
     shortDescription: 'Structured rehabilitation restoring walking ability, hip strength, flexibility, and daily independence.',
-    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800', // walker supervision
+    image: '/images/post_operative_rehabilitation.png',
     successRate: 96,
     conditionDescription: 'Post-surgical care designed to safely restore mobility and strength following a total hip arthroplasty (THA).',
     symptoms: ['Surgical pain', 'Weakness', 'Limited weight bearing'],

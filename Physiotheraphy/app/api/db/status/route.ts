@@ -36,16 +36,17 @@ export async function POST(req: NextRequest) {
       // 1. Sync users
       for (const u of data.users) {
         try {
+          const role = u.role === 'therapist' ? 'doctor' : u.role;
           const { error } = await supabase.from('users').upsert({
             id: u.id,
             email: u.email,
             first_name: u.firstName,
             last_name: u.lastName,
-            phone: u.phone,
-            role: u.role,
-            age: u.age,
-            gender: u.gender,
-          }, { onConflict: 'email' });
+            phone: u.phone || null,
+            role: role,
+            age: u.age || null,
+            gender: u.gender || null,
+          }, { onConflict: 'id' });
 
           if (!error) results.usersSynced++;
           else results.errors.push(`User ${u.email}: ${error.message}`);

@@ -1,44 +1,87 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { db, DBNotification } from '@/lib/db';
+import { DBNotification } from '@/lib/db';
+import { getAuthHeaders } from '@/lib/authHeaders';
 import { 
-  Bell, CheckCircle2, Calendar, FileText, Activity, ShieldCheck, ArrowRight 
+  Bell, CheckCircle2, Calendar, FileText, ArrowRight 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function NotificationsPage() {
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<DBNotification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const refreshNotifs = () => {
-    if (user) {
-      setNotifications(db.getNotifications(user.id));
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch('/api/notifications', {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.notifications)) {
+          setNotifications(json.notifications);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ markAll: true }),
+      });
+      // Optimistic update
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
     }
   };
 
-  useEffect(() => {
-    refreshNotifs();
-  }, [user]);
-
-  const handleMarkAllRead = () => {
-    db.markAllNotificationsRead(user?.id);
-    refreshNotifs();
+  const handleMarkSingleRead = async (id: string) => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id }),
+      });
+      // Optimistic update
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
   };
 
-  const handleMarkSingleRead = (id: string) => {
-    db.markNotificationRead(id);
-    refreshNotifs();
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="w-8 h-8 border-4 border-[#1E6FFF]/30 border-t-[#1E6FFF] rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#0D1421] tracking-tight">
-            Notifications & Clinical Alerts
+            Notifications &amp; Clinical Alerts
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
             Stay informed about your upcoming clinical appointments, physician updates, and prescribed home routines.
@@ -115,6 +158,7 @@ export default function NotificationsPage() {
                   <Link
                     href={notif.link}
                     className="p-2 text-xs font-bold text-[#1E6FFF] hover:text-[#1558D6] shrink-0"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <ArrowRight className="w-4 h-4" />
                   </Link>

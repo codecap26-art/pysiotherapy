@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { db, DBAppointment, DBClinicalNote } from '@/lib/db';
+import { DBAppointment, DBClinicalNote } from '@/lib/db';
 import { formatPrice } from '@/lib/bookingData';
+import { getAuthHeaders } from '@/lib/authHeaders';
 import { 
   Stethoscope, Calendar, Clock, Users, Activity, CheckCircle2, 
   FileText, Plus, AlertCircle, Dumbbell, Star, ChevronRight, X, Sparkles, Check 
@@ -31,7 +32,10 @@ export default function TherapistDashboardPage() {
 
   const refreshAppointments = async () => {
     try {
-      const res = await fetch('/api/appointments');
+      // The API uses the auth token to identify the doctor and filters appointments by their specialistId
+      const res = await fetch('/api/appointments', {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.appointments)) {
@@ -39,10 +43,9 @@ export default function TherapistDashboardPage() {
           return;
         }
       }
-    } catch {}
-    const doctorId = user?.id || 'sarah-jenkins';
-    const list = db.getAppointmentsByDoctor(doctorId);
-    setAppointments(list);
+    } catch (err) {
+      console.error('Failed to fetch appointments:', err);
+    }
   };
 
   useEffect(() => {
@@ -50,11 +53,10 @@ export default function TherapistDashboardPage() {
   }, [user]);
 
   const handleStatusChange = async (id: string, status: DBAppointment['status']) => {
-    db.updateAppointmentStatus(id, status);
     try {
       await fetch('/api/appointments', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id, status }),
       });
     } catch {}
@@ -85,8 +87,7 @@ export default function TherapistDashboardPage() {
     const notePayload = {
       appointmentId: selectedAppointment.id,
       patientId: selectedAppointment.patientId,
-      doctorId: user?.id || 'usr-doctor-sarah',
-      doctorName: user ? `Dr. ${user.firstName} ${user.lastName}` : 'Dr. Sarah Jenkins',
+      doctorName: user ? `Dr. ${user.firstName} ${user.lastName}` : 'Dr. Specialist',
       date: new Date().toISOString().split('T')[0],
       diagnosis,
       symptomsObserved: `Patient reported pain level ${selectedAppointment.painLevel}/10 for ${selectedAppointment.painDuration}.`,
@@ -96,22 +97,19 @@ export default function TherapistDashboardPage() {
       nextFollowUpDate: nextFollowUp || 'In 1 week',
     };
 
-    db.createClinicalNote(notePayload);
-
     try {
       await fetch('/api/medical-notes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(notePayload),
       });
       await fetch('/api/appointments', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id: selectedAppointment.id, status: 'completed' }),
       });
     } catch {}
 
-    db.updateAppointmentStatus(selectedAppointment.id, 'completed');
     setConsultModalOpen(false);
     refreshAppointments();
     setToastMessage('Clinical consultation note and exercises saved to database successfully!');
@@ -121,7 +119,7 @@ export default function TherapistDashboardPage() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const filteredAppointments = appointments.filter((a) => {
-    if (activeTab === 'today') return a.date === todayStr || a.date === '2026-08-10' || a.date === '2026-08-12';
+    if (activeTab === 'today') return a.date === todayStr;
     if (activeTab === 'upcoming') return a.status === 'confirmed' || a.status === 'pending' || a.status === 'rescheduled';
     if (activeTab === 'completed') return a.status === 'completed';
     return true;

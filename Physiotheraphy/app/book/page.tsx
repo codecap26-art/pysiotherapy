@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useBookingStore } from '@/lib/store/useBookingStore';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { CheckCircle2, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,12 +29,17 @@ const STEPS = [
 ];
 
 export default function BookingWizard() {
+  const router = useRouter();
+  const { user } = useAuthStore();
   const { currentStep, prevStep, setStep, resetBooking } = useBookingStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (user?.role === 'therapist' || user?.role === 'doctor') {
+      router.push('/therapist');
+    }
+  }, [user, router]);
 
   if (!mounted) {
     return (

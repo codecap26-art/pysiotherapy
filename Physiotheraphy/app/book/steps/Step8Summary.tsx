@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '@/lib/store/useBookingStore';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { TREATMENTS, SPECIALISTS, formatPrice } from '@/lib/bookingData';
-import { CLINIC_BRANCHES } from '@/lib/clinicData';
+import { formatPrice } from '@/lib/bookingData';
+import { getTreatmentById } from '@/lib/services/treatmentService';
+import { getSpecialistById } from '@/lib/services/specialistService';
+import { getClinicById } from '@/lib/services/clinicService';
 import { 
-  Calendar, Clock, MapPin, Stethoscope, Activity, ShieldCheck, CheckCircle2, Loader2, AlertCircle 
+  Calendar, Clock, MapPin, Stethoscope, Activity, ShieldCheck, CheckCircle2, Loader2, AlertCircle, LogIn 
 } from 'lucide-react';
 
 export default function Step8Summary() {
@@ -21,18 +23,47 @@ export default function Step8Summary() {
   } = useBookingStore();
 
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
   const [agreeTerms, setAgreeTerms] = useState(true);
 
-  const treatment = TREATMENTS.find((t) => t.id === treatmentId);
-  const specialist = SPECIALISTS.find((s) => s.id === specialistId);
-  const clinic = CLINIC_BRANCHES.find((c) => c.id === clinicId);
+  const [treatment, setTreatment] = useState<any>(null);
+  const [specialist, setSpecialist] = useState<any>(null);
+  const [clinic, setClinic] = useState<any>(null);
 
-  const fee = treatment?.startingPrice || 1500;
+  useEffect(() => {
+    async function loadData() {
+      if (treatmentId && specialistId && clinicId) {
+        const [t, s, c] = await Promise.all([
+          getTreatmentById(treatmentId),
+          getSpecialistById(specialistId),
+          getClinicById(clinicId)
+        ]);
+        setTreatment(t);
+        setSpecialist(s);
+        setClinic(c);
+      }
+      setDataLoading(false);
+    }
+    loadData();
+  }, [treatmentId, specialistId, clinicId]);
+
+  if (dataLoading) {
+    return <div className="p-8 text-center text-slate-500">Loading summary...</div>;
+  }
+
+  const fee = treatment?.base_fee || 1500;
   const tax = Math.round(fee * 0.18);
   const totalAmount = fee + tax;
 
   const handleConfirm = async () => {
     if (!agreeTerms) return;
+
+    if (!user) {
+      // Redirect to login with a return URL to continue booking
+      router.push('/auth/login?redirect=/book');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -81,13 +112,13 @@ export default function Step8Summary() {
               <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
                 <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Treatment</div>
                 <div className="text-base font-bold text-[#0D1421] mt-1">{treatment?.name || 'Physiotherapy'}</div>
-                <div className="text-xs text-[#1E6FFF] font-medium mt-0.5">{treatment?.duration} duration</div>
+                <div className="text-xs text-[#1E6FFF] font-medium mt-0.5">45 mins duration</div>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
                 <div className="text-[11px] font-bold text-[#8896A8] uppercase tracking-wider">Assigned Therapist</div>
-                <div className="text-base font-bold text-[#0D1421] mt-1">{specialist?.name || 'Dr. Sarah Jenkins'}</div>
-                <div className="text-xs text-[#64748B] font-medium mt-0.5">{specialist?.title}</div>
+                <div className="text-base font-bold text-[#0D1421] mt-1">{specialist?.full_name || 'Specialist'}</div>
+                <div className="text-xs text-[#64748B] font-medium mt-0.5">{specialist?.title || 'Physiotherapist'}</div>
               </div>
             </div>
 
@@ -164,15 +195,27 @@ export default function Step8Summary() {
               <span>I confirm the appointment details and agree to Healing Motion clinic policies.</span>
             </label>
 
+            {!user && (
+              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>You must be logged in to confirm your appointment.</span>
+              </div>
+            )}
+
             <button
               onClick={handleConfirm}
-              disabled={loading || !agreeTerms}
+              disabled={loading || !agreeTerms || dataLoading}
               className="w-full py-4 px-6 rounded-2xl bg-[#1E6FFF] text-white font-bold text-sm shadow-[0_4px_16px_rgba(30,111,255,0.3)] hover:bg-[#1558D6] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Confirming Booking...</span>
+                  <span>{user ? 'Confirming Booking...' : 'Redirecting...'}</span>
+                </>
+              ) : !user ? (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  <span>Login or Register to Confirm</span>
                 </>
               ) : (
                 <>

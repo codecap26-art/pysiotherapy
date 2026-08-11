@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store/useAuthStore';
-import { db, DBAppointment, DBClinicalNote } from '@/lib/db';
+import { DBAppointment, DBClinicalNote } from '@/lib/db';
+import { getAuthHeaders } from '@/lib/authHeaders';
+import { getAppointments } from '@/lib/supabaseService';
 import { 
   Calendar, Clock, MapPin, Activity, CheckCircle2, ArrowRight, PlusCircle, 
   FileText, TrendingUp, AlertCircle, Dumbbell, ShieldCheck, Heart, Sparkles 
 } from 'lucide-react';
-
-import { getAppointments } from '@/lib/supabaseService';
 
 export default function PatientDashboardOverview() {
   const router = useRouter();
@@ -31,10 +31,37 @@ export default function PatientDashboardOverview() {
 
     const loadData = async () => {
       if (user) {
-        const userNotes = db.getClinicalNotesByPatient(user.id);
-        setClinicalNotes(userNotes);
-        const userApts = await getAppointments(user.id);
-        setAppointments(userApts);
+        // Fetch clinical notes from server API with auth token
+        try {
+          const notesRes = await fetch('/api/medical-notes', {
+            headers: getAuthHeaders(),
+          });
+          if (notesRes.ok) {
+            const notesJson = await notesRes.json();
+            if (notesJson.success && Array.isArray(notesJson.notes)) {
+              setClinicalNotes(notesJson.notes);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch clinical notes:', err);
+        }
+
+        // Fetch appointments from server API with auth token
+        try {
+          const aptsRes = await fetch('/api/appointments', {
+            headers: getAuthHeaders(),
+          });
+          if (aptsRes.ok) {
+            const aptsJson = await aptsRes.json();
+            if (aptsJson.success && Array.isArray(aptsJson.appointments)) {
+              setAppointments(aptsJson.appointments);
+            }
+          }
+        } catch {
+          // fallback to supabaseService which also tries the API
+          const userApts = await getAppointments(user.id);
+          setAppointments(userApts);
+        }
       }
       setLoading(false);
     };
@@ -45,7 +72,8 @@ export default function PatientDashboardOverview() {
   const upcomingApt = appointments.find((a) => a.status === 'confirmed' || a.status === 'pending');
   const completedCount = appointments.filter((a) => a.status === 'completed').length;
   const latestNote = clinicalNotes[0];
-  const recoveryProgress = latestNote?.recoveryProgress || 65;
+  const recoveryProgress = latestNote?.recoveryProgress ?? null;
+  const prescribedExercises = latestNote?.exercisesPrescribed || [];
 
   if (loading) {
     return (
@@ -173,12 +201,20 @@ export default function PatientDashboardOverview() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-2 mt-4 border-t border-gray-100 pt-4">
+                  <Link
+                    href={`/meet/${upcomingApt.id}`}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[#1E6FFF] text-white rounded-xl text-xs font-bold shadow-md hover:bg-[#1558D6] transition-colors"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                    Join Video Call
+                  </Link>
+
                   <Link
                     href="/dashboard/appointments"
                     className="text-xs font-bold text-[#1E6FFF] hover:text-[#1558D6] flex items-center gap-1"
                   >
-                    <span>Manage all appointments</span>
+                    <span>Manage all</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -203,36 +239,42 @@ export default function PatientDashboardOverview() {
                 <Dumbbell className="w-5 h-5 text-[#10B981]" />
                 <h2 className="text-lg font-bold text-[#0D1421]">Prescribed Home Program</h2>
               </div>
-              <Link
-                href="/dashboard/medical-history"
-                className="text-xs font-bold text-[#1E6FFF] hover:underline"
-              >
-                View Full Details
-              </Link>
+              {prescribedExercises.length > 0 && (
+                <Link
+                  href="/dashboard/medical-history"
+                  className="text-xs font-bold text-[#1E6FFF] hover:underline"
+                >
+                  View Full Details
+                </Link>
+              )}
             </div>
 
-            <div className="space-y-3">
-              {(latestNote?.exercisesPrescribed || [
-                { name: 'Cat-Camel Spine Mobilization', sets: '2 sets', reps: '10 reps', frequency: 'Twice daily', notes: 'Maintain fluid breathing' },
-                { name: 'Bird Dog Core Activation', sets: '3 sets', reps: '8 reps per side', frequency: 'Daily', notes: 'Hold 3s at top' },
-                { name: 'Glute Bridge with Band', sets: '3 sets', reps: '12 reps', frequency: 'Daily', notes: 'Squeeze glutes at top' },
-              ]).map((ex, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between"
-                >
-                  <div>
-                    <div className="text-sm font-bold text-[#0D1421]">{ex.name}</div>
-                    <div className="text-xs text-[#64748B] mt-0.5">
-                      {ex.sets} • {ex.reps} • {ex.frequency}
+            {prescribedExercises.length > 0 ? (
+              <div className="space-y-3">
+                {prescribedExercises.map((ex, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between"
+                  >
+                    <div>
+                      <div className="text-sm font-bold text-[#0D1421]">{ex.name}</div>
+                      <div className="text-xs text-[#64748B] mt-0.5">
+                        {ex.sets} • {ex.reps} • {ex.frequency}
+                      </div>
                     </div>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                      Active
+                    </span>
                   </div>
-                  <span className="text-[11px] font-semibold px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-                    Active
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Dumbbell className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p className="text-sm text-[#64748B] mb-1">No exercises prescribed yet.</p>
+                <p className="text-xs text-[#94A3B8]">Your therapist will add a home program after your first consultation.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -245,22 +287,27 @@ export default function PatientDashboardOverview() {
               <h3 className="text-base font-bold text-[#0D1421]">Clinical Diagnosis</h3>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#EFF5FF] border border-[#BFDBFE] text-xs space-y-2">
-              <div className="font-bold text-[#1E6FFF]">
-                {latestNote?.doctorName || 'Dr. Sarah Jenkins'}
+            {latestNote ? (
+              <>
+                <div className="p-4 rounded-2xl bg-[#EFF5FF] border border-[#BFDBFE] text-xs space-y-2">
+                  <div className="font-bold text-[#1E6FFF]">{latestNote.doctorName}</div>
+                  <p className="text-[#0D1421] font-medium leading-relaxed">{latestNote.diagnosis}</p>
+                  <div className="text-[11px] text-[#64748B] pt-1">Last updated: {latestNote.date}</div>
+                </div>
+                {latestNote.symptomsObserved && (
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>{latestNote.symptomsObserved}</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <FileText className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                <p className="text-sm text-[#64748B] mb-1">No clinical notes yet.</p>
+                <p className="text-xs text-[#94A3B8]">Your diagnosis will appear here after your first consultation.</p>
               </div>
-              <p className="text-[#0D1421] font-medium leading-relaxed">
-                {latestNote?.diagnosis || 'Mild lumbar disc irritation without neurological deficit. Showing progressive improvement in range of motion.'}
-              </p>
-              <div className="text-[11px] text-[#64748B] pt-1">
-                Last updated: {latestNote?.date || 'Jul 28, 2026'}
-              </div>
-            </div>
-
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <span>Please avoid heavy deadlifts or prolonged slouching without lumbar roll.</span>
-            </div>
+            )}
           </div>
 
           {/* Need help support */}

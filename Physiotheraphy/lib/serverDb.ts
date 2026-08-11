@@ -314,6 +314,18 @@ export class ServerDatabase {
       read: false,
     });
 
+    // Auto-create notification for the actual booked doctor (using their real specialist/user ID)
+    if (newAppointment.specialistId) {
+      this.addNotification({
+        userId: newAppointment.specialistId,
+        title: 'New Appointment Request',
+        message: `New booking: ${newAppointment.patientName} requested ${newAppointment.treatmentName} on ${newAppointment.date} at ${newAppointment.timeSlot}. Status: ${newAppointment.status}.`,
+        type: 'booking',
+        link: '/dashboard/therapist',
+        read: false,
+      });
+    }
+
     return newAppointment;
   }
 

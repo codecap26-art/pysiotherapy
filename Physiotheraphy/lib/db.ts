@@ -339,13 +339,9 @@ export const db = {
     return this.getAppointments().filter((a) => a.patientId === patientId || a.patientEmail === patientId);
   },
 
-  getAppointmentsByDoctor(doctorSlugOrId: string): DBAppointment[] {
-    return this.getAppointments().filter(
-      (a) =>
-        a.specialistId === doctorSlugOrId ||
-        a.specialistName.toLowerCase().includes(doctorSlugOrId.toLowerCase()) ||
-        doctorSlugOrId.includes('sarah')
-    );
+  getAppointmentsByDoctor(doctorId: string): DBAppointment[] {
+    // Only exact match on specialistId — no fuzzy/hardcoded fallbacks
+    return this.getAppointments().filter((a) => a.specialistId === doctorId);
   },
 
   getAppointmentById(id: string): DBAppointment | undefined {
@@ -374,14 +370,16 @@ export const db = {
       link: '/dashboard/appointments',
     });
 
-    // Create notification for doctor
-    this.createNotification({
-      userId: 'usr-doctor-sarah',
-      title: 'New Appointment Scheduled',
-      message: `${data.patientName} scheduled ${data.treatmentName} for ${data.date} at ${data.timeSlot}.`,
-      type: 'booking',
-      link: '/dashboard/therapist',
-    });
+    // Create notification for the actual booked doctor using their real specialist ID
+    if (data.specialistId) {
+      this.createNotification({
+        userId: data.specialistId,
+        title: 'New Appointment Request',
+        message: `${data.patientName} booked ${data.treatmentName} on ${data.date} at ${data.timeSlot}.`,
+        type: 'booking',
+        link: '/dashboard/therapist',
+      });
+    }
 
     return newAppointment;
   },
@@ -461,7 +459,8 @@ export const db = {
   getNotifications(userId?: string): DBNotification[] {
     const notifs = getStorage<DBNotification[]>(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS);
     if (!userId) return notifs;
-    return notifs.filter((n) => n.userId === userId || n.userId === 'usr-001');
+    // Strict filter — only return this user's own notifications
+    return notifs.filter((n) => n.userId === userId);
   },
 
   createNotification(data: Omit<DBNotification, 'id' | 'read' | 'createdAt'>): DBNotification {
