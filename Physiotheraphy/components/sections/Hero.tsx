@@ -7,7 +7,7 @@ import Image from 'next/image';
 
 export function Hero() {
   return (
-    <section className="relative w-full min-h-screen flex flex-col justify-between pt-24 pb-8 overflow-hidden">
+    <section className="relative w-full min-h-screen flex flex-col justify-between pt-24 pb-12 lg:pb-16 overflow-hidden">
 
       {/* ─── BACKGROUND GRADIENT ─── */}
       <div
@@ -41,13 +41,75 @@ export function Hero() {
             Modern Physiotherapy • Human-Centered Care
           </p>
 
-          {/* Headline */}
-          <h1 className="text-[48px] sm:text-[64px] xl:text-[76px] font-black text-[#0D1421] leading-[0.94] tracking-tight mb-1.5">
-            Healing<br />Motion
-          </h1>
-          <h2 className="text-[32px] sm:text-[44px] xl:text-[50px] font-black text-[#1E6FFF] tracking-tight leading-none mb-4">
-            Physiotherapy
-          </h2>
+          {/* Animated Letter-by-Letter Headline */}
+          <motion.h1
+            className="text-[48px] sm:text-[64px] xl:text-[76px] font-black text-[#0D1421] leading-[0.94] tracking-tight mb-1.5 flex flex-wrap"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 1 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.04 } },
+            }}
+          >
+            {/* Word: Healing */}
+            <span className="inline-block whitespace-nowrap mr-3 sm:mr-4">
+              {Array.from("Healing").map((char, index) => (
+                <motion.span
+                  key={`h-${index}`}
+                  className="inline-block"
+                  variants={{
+                    hidden: { opacity: 0, y: 28, filter: 'blur(4px)' },
+                    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', damping: 12, stiffness: 200 } },
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </span>
+
+            <div className="w-full h-0" />
+
+            {/* Word: Motion */}
+            <span className="inline-block whitespace-nowrap">
+              {Array.from("Motion").map((char, index) => (
+                <motion.span
+                  key={`m-${index}`}
+                  className="inline-block"
+                  variants={{
+                    hidden: { opacity: 0, y: 28, filter: 'blur(4px)' },
+                    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', damping: 12, stiffness: 200 } },
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </span>
+          </motion.h1>
+
+          <motion.h2
+            className="text-[32px] sm:text-[44px] xl:text-[50px] font-black text-[#1E6FFF] tracking-tight leading-none mb-4 flex flex-wrap"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 1 },
+              visible: { opacity: 1, transition: { staggerChildren: 0.035, delayChildren: 0.25 } },
+            }}
+          >
+            <span className="inline-block whitespace-nowrap">
+              {Array.from("Physiotherapy").map((char, index) => (
+                <motion.span
+                  key={`p-${index}`}
+                  className="inline-block"
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: 'blur(4px)' },
+                    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { type: 'spring', damping: 12, stiffness: 200 } },
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </span>
+          </motion.h2>
 
           <p className="text-[14px] xl:text-[16px] text-[#2c3e50] font-medium leading-[1.5] max-w-[420px] mb-6">
             Personalized physiotherapy designed around your movement, recovery, and long-term wellbeing.
@@ -189,45 +251,6 @@ export function Hero() {
           </div>
         </motion.div>
 
-      </div>
-
-      {/* ─── 1-WAVELENGTH DEEP GLASSY WAVE SEAMLESS TRANSITION ─── */}
-      <div className="relative w-full overflow-hidden leading-none z-20 pointer-events-none -mb-[1px] mt-8">
-        <svg
-          viewBox="0 0 1440 120"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-16 sm:h-24 lg:h-32 block relative z-10"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="waveGlassHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.95" />
-            </linearGradient>
-          </defs>
-
-          {/* Translucent Frosted Glass Wave Layer */}
-          <path
-            d="M0,45 C360,115 720,-15 1080,115 1440,45 L1440,120 L0,120 Z"
-            fill="rgba(255, 255, 255, 0.28)"
-          />
-
-          {/* Main 1-Wavelength Sine Curve transitioning into white body below */}
-          <path
-            d="M0,58 C360,128 720,-2 1080,128 1440,58 L1440,120 L0,120 Z"
-            fill="#ffffff"
-          />
-
-          {/* Glowing Glass Top Edge Highlight */}
-          <path
-            d="M0,58 C360,128 720,-2 1080,128 1440,58"
-            stroke="url(#waveGlassHighlight)"
-            strokeWidth="3.5"
-            fill="none"
-          />
-        </svg>
       </div>
 
     </section>

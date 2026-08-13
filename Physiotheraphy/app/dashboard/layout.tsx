@@ -33,18 +33,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   const THERAPIST_NAV = [
-    { name: 'Clinical Schedule', href: '/dashboard/therapist', icon: Calendar },
-    { name: 'Patient Consultations', href: '/dashboard/therapist#consultations', icon: Users },
-    { name: 'Prescribe Exercises', href: '/dashboard/therapist#prescribe', icon: Activity },
-    { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
-    { name: 'Doctor Profile', href: '/dashboard/profile', icon: Stethoscope },
+    { name: 'Clinical Schedule', href: '/therapist', icon: Calendar },
+    { name: 'Patient Consultations', href: '/therapist', icon: Users },
+    { name: 'Prescribe Exercises', href: '/therapist', icon: Activity },
+    { name: 'Notifications', href: '/therapist', icon: Bell },
+    { name: 'Doctor Profile', href: '/therapist', icon: Stethoscope },
   ];
 
   const navLinks = isTherapist ? THERAPIST_NAV : PATIENT_NAV;
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#FAFBFF] pt-20 flex">
+      <div className="min-h-screen bg-[#FAFBFF] pt-24 lg:pt-28 flex">
         {/* Mobile Sidebar Toggle Button */}
         <button 
           type="button"

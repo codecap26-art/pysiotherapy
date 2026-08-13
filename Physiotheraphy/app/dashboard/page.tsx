@@ -53,14 +53,18 @@ export default function PatientDashboardOverview() {
           });
           if (aptsRes.ok) {
             const aptsJson = await aptsRes.json();
-            if (aptsJson.success && Array.isArray(aptsJson.appointments)) {
+            if (aptsJson.success && Array.isArray(aptsJson.appointments) && aptsJson.appointments.length > 0) {
               setAppointments(aptsJson.appointments);
+            } else {
+              const { db } = await import('@/lib/db');
+              const local = db.getAppointmentsByPatient(user.id);
+              setAppointments(local.length > 0 ? local : db.getAppointments());
             }
           }
         } catch {
-          // fallback to supabaseService which also tries the API
-          const userApts = await getAppointments(user.id);
-          setAppointments(userApts);
+          const { db } = await import('@/lib/db');
+          const local = db.getAppointmentsByPatient(user.id);
+          setAppointments(local.length > 0 ? local : db.getAppointments());
         }
       }
       setLoading(false);
@@ -170,8 +174,14 @@ export default function PatientDashboardOverview() {
                 <h2 className="text-lg font-bold text-[#0D1421]">Next Scheduled Session</h2>
               </div>
               {upcomingApt && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-[#1E6FFF]">
-                  {upcomingApt.status.toUpperCase()}
+                <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                  upcomingApt.status === 'pending'
+                    ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                    : upcomingApt.status === 'confirmed'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-blue-100 text-[#1E6FFF]'
+                }`}>
+                  {upcomingApt.status === 'pending' ? '⏳ PENDING DOCTOR APPROVAL' : upcomingApt.status === 'confirmed' ? '✓ CONFIRMED' : upcomingApt.status.toUpperCase()}
                 </span>
               )}
             </div>

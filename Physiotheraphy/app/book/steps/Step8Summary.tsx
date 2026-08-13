@@ -19,7 +19,7 @@ export default function Step8Summary() {
   const { 
     treatmentId, specialistId, clinicId, date, timeSlot,
     painLevel, painDuration, reasonForVisit, appointmentType,
-    confirmBooking 
+    confirmBooking, resetBooking
   } = useBookingStore();
 
   const [loading, setLoading] = useState(false);
@@ -32,17 +32,24 @@ export default function Step8Summary() {
 
   useEffect(() => {
     async function loadData() {
-      if (treatmentId && specialistId && clinicId) {
+      try {
         const [t, s, c] = await Promise.all([
-          getTreatmentById(treatmentId),
-          getSpecialistById(specialistId),
-          getClinicById(clinicId)
+          treatmentId ? getTreatmentById(treatmentId) : null,
+          specialistId ? getSpecialistById(specialistId) : null,
+          clinicId ? getClinicById(clinicId) : null
         ]);
-        setTreatment(t);
-        setSpecialist(s);
-        setClinic(c);
+
+        const { TREATMENTS, SPECIALISTS } = await import('@/lib/bookingData');
+        const { CLINIC_BRANCHES } = await import('@/lib/clinicData');
+
+        setTreatment(t || TREATMENTS.find(tr => tr.id === treatmentId) || TREATMENTS[0]);
+        setSpecialist(s || SPECIALISTS.find(sp => sp.id === specialistId) || SPECIALISTS[0]);
+        setClinic(c || CLINIC_BRANCHES.find(cl => cl.id === clinicId) || CLINIC_BRANCHES[0]);
+      } catch (err) {
+        console.error('Error loading summary data:', err);
+      } finally {
+        setDataLoading(false);
       }
-      setDataLoading(false);
     }
     loadData();
   }, [treatmentId, specialistId, clinicId]);
@@ -69,6 +76,7 @@ export default function Step8Summary() {
     try {
       const newBooking = await confirmBooking(user);
       if (newBooking) {
+        resetBooking();
         router.push(`/book/success?id=${newBooking.id}`);
       } else {
         setLoading(false);

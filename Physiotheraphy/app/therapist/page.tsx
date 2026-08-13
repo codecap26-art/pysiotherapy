@@ -13,7 +13,7 @@ const statusConfig: Record<string, { bg: string; text: string; label: string }> 
   completed: { bg: '#F0FDF4', text: '#166534', label: 'Completed' },
 };
 
-const TABS = ['Schedule', 'Patients', 'Notes', 'Analytics'];
+const TABS = ['Schedule', 'Patients', 'Notes', 'Notifications', 'Analytics'];
 
 export default function TherapistDashboard() {
   const router = useRouter();
@@ -23,39 +23,59 @@ export default function TherapistDashboard() {
   const [noteText, setNoteText] = useState('');
   const [mounted, setMounted] = useState(false);
   const [appointments, setAppointments] = useState<DBAppointment[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const specialist = user || SPECIALISTS[0]; // Fallback if not logged in for demo
+  const specialist: any = user || SPECIALISTS[0]; // Fallback if not logged in for demo
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch('/api/appointments', {
-          headers: {
-            'Authorization': `Bearer ${user?.token || ''}`,
+        const userToken = (user as any)?.token || '';
+        const [aptsRes, notifsRes] = await Promise.all([
+          fetch('/api/appointments', {
+            headers: { 'Authorization': `Bearer ${userToken}` }
+          }),
+          fetch('/api/notifications', {
+            headers: { 'Authorization': `Bearer ${userToken}` }
+          }).catch(() => null)
+        ]);
+
+        if (aptsRes && aptsRes.ok) {
+          const data = await aptsRes.json();
+          if (data.success && data.appointments) {
+            const sorted = data.appointments.sort((a: DBAppointment, b: DBAppointment) => {
+              if (a.date !== b.date) return a.date.localeCompare(b.date);
+              return a.timeSlot.localeCompare(b.timeSlot);
+            });
+            setAppointments(sorted);
           }
-        });
-        const data = await res.json();
-        if (data.success && data.appointments) {
-          // Sort by date and time (rough sort for demo)
-          const sorted = data.appointments.sort((a: DBAppointment, b: DBAppointment) => {
-            if (a.date !== b.date) return a.date.localeCompare(b.date);
-            return a.timeSlot.localeCompare(b.timeSlot);
-          });
-          setAppointments(sorted);
+        }
+
+        if (notifsRes && notifsRes.ok) {
+          const nData = await notifsRes.json();
+          if (nData.success && Array.isArray(nData.notifications)) {
+            setNotifications(nData.notifications);
+          }
+        } else {
+          // Fallback to local DB notifications
+          const { db } = await import('@/lib/db');
+          if (user?.id) {
+            setNotifications(db.getNotifications(user.id));
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch appointments:', err);
+        console.error('Failed to fetch therapist data:', err);
       }
     };
 
-    fetchAppointments();
-    
+    fetchData();
+
     // Poll for real-time updates
-    const interval = setInterval(fetchAppointments, 5000);
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -63,10 +83,44 @@ export default function TherapistDashboard() {
     router.push(`/meet/${appointmentId}`);
   };
 
+  const handleUpdateStatus = async (appointmentId: string, newStatus: string) => {
+    try {
+      const res = await fetch('/api/appointments', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token || ''}`,
+        },
+        body: JSON.stringify({ id: appointmentId, status: newStatus }),
+      });
+
+      if (res.ok) {
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === appointmentId ? { ...a, status: newStatus as any } : a))
+        );
+        if (selectedSession?.id === appointmentId) {
+          setSelectedSession((prev) => prev ? { ...prev, status: newStatus as any } : null);
+        }
+      } else {
+        // Local fallback update
+        const { db } = await import('@/lib/db');
+        db.updateAppointmentStatus(appointmentId, newStatus as any);
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === appointmentId ? { ...a, status: newStatus as any } : a))
+        );
+        if (selectedSession?.id === appointmentId) {
+          setSelectedSession((prev) => prev ? { ...prev, status: newStatus as any } : null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
   return (
     <div style={{ background: '#FAFBFF', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,#0F172A 0%,#1E40AF 100%)', padding: '36px 24px 52px' }}>
+      <div style={{ background: 'linear-gradient(135deg,#0F172A 0%,#1E40AF 100%)', padding: '108px 24px 56px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -159,14 +213,14 @@ export default function TherapistDashboard() {
                     <div style={{ fontSize: 12, color: '#6B7280' }}>{selectedSession.treatmentName} · {selectedSession.appointmentType}</div>
                     <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>🕐 {selectedSession.timeSlot} on {selectedSession.date}</div>
                   </div>
-                  
+
                   {/* Join Video Call Button for Online Consultations */}
                   <div style={{ marginBottom: 20 }}>
-                    <button 
+                    <button
                       onClick={() => handleJoinCall(selectedSession.id)}
                       style={{ width: '100%', padding: '12px 0', borderRadius: 12, border: 'none', background: '#1E6FFF', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(30,111,255,0.3)' }}
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>
                       Join Video Call
                     </button>
                   </div>
@@ -187,8 +241,37 @@ export default function TherapistDashboard() {
                     <textarea value={noteText} onChange={e => setNoteText(e.target.value)} rows={4} placeholder="Enter session observations, treatment applied, patient response..."
                       style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1.5px solid #E8ECF4', fontSize: 13, resize: 'vertical', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
                   </div>
+                  {/* Doctor Approve & Reject Action Buttons */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+                    <button
+                      onClick={() => handleUpdateStatus(selectedSession.id, 'confirmed')}
+                      disabled={selectedSession.status === 'confirmed'}
+                      style={{
+                        padding: '10px 0', borderRadius: 12, border: 'none',
+                        background: selectedSession.status === 'confirmed' ? '#D1FAE5' : '#10B981',
+                        color: selectedSession.status === 'confirmed' ? '#065F46' : '#fff',
+                        fontWeight: 700, fontSize: 13, cursor: selectedSession.status === 'confirmed' ? 'default' : 'pointer'
+                      }}
+                    >
+                      {selectedSession.status === 'confirmed' ? '✓ Approved' : '✓ Approve Booking'}
+                    </button>
+
+                    <button
+                      onClick={() => handleUpdateStatus(selectedSession.id, 'cancelled')}
+                      disabled={selectedSession.status === 'cancelled'}
+                      style={{
+                        padding: '10px 0', borderRadius: 12, border: 'none',
+                        background: selectedSession.status === 'cancelled' ? '#FEE2E2' : '#EF4444',
+                        color: selectedSession.status === 'cancelled' ? '#991B1B' : '#fff',
+                        fontWeight: 700, fontSize: 13, cursor: selectedSession.status === 'cancelled' ? 'default' : 'pointer'
+                      }}
+                    >
+                      {selectedSession.status === 'cancelled' ? '✕ Rejected' : '✕ Reject Booking'}
+                    </button>
+                  </div>
+
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: '#F0FDF4', color: 'var(--color-accent-hover)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>✓ Mark Complete</button>
+                    <button onClick={() => handleUpdateStatus(selectedSession.id, 'completed')} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: '#F0FDF4', color: 'var(--color-accent-hover)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>✓ Mark Complete</button>
                     <button style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', background: 'var(--color-primary)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save Notes</button>
                   </div>
                 </div>
@@ -286,6 +369,68 @@ export default function TherapistDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Notifications' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0D1421', margin: 0 }}>Notifications & Clinical Alerts</h2>
+              <button
+                onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
+                style={{ background: '#fff', border: '1px solid #E8ECF4', borderRadius: 12, padding: '6px 14px', fontSize: 12, fontWeight: 600, color: '#1E6FFF', cursor: 'pointer' }}
+              >
+                Mark All as Read
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {notifications.length === 0 ? (
+                <div style={{ background: '#fff', borderRadius: 18, border: '1px solid #E8ECF4', padding: 30, textAlign: 'center', color: '#6B7280', fontSize: 13 }}>
+                  No new notifications.
+                </div>
+              ) : (
+                notifications.map((n) => {
+                  let formattedDate = 'Recently';
+                  try {
+                    const rawDate = n.createdAt || n.created_at || n.date;
+                    if (rawDate) {
+                      const d = new Date(rawDate);
+                      if (!isNaN(d.getTime())) {
+                        formattedDate = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+                      }
+                    }
+                  } catch { }
+
+                  return (
+                    <div
+                      key={n.id || Math.random()}
+                      style={{
+                        background: n.read ? '#fff' : '#EFF5FF',
+                        borderRadius: 18,
+                        border: '1px solid #DBEAFE',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 14, background: '#DBEAFE', color: '#1E6FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800 }}>
+                          🔔
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1421', marginBottom: 2 }}>{n.title}</div>
+                          <div style={{ fontSize: 12, color: '#475569' }}>{n.message}</div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 4 }}>{formattedDate}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         )}

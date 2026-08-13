@@ -22,34 +22,66 @@ export async function POST(req: NextRequest) {
     const isDemoPassword = ['Demo@1234', 'Doctor@1234', 'Admin@1234'].includes(password);
     
     if (isDemoPassword) {
-      // For demo, just find the user by email in public.users
-      const { data: demoUser, error: demoErr } = await supabase
+      // For demo, first try finding user in Supabase public.users
+      const { data: demoUser } = await supabase
         .from('users')
         .select('id, role, first_name, last_name')
         .eq('email', normalizedEmail)
         .single();
-        
-      if (demoErr || !demoUser) {
+
+      let targetId = demoUser?.id;
+      let targetRole = demoUser?.role;
+      let targetName = demoUser ? `${demoUser.first_name} ${demoUser.last_name}` : '';
+
+      // If not in Supabase, fallback to local DEMO_USERS list
+      if (!demoUser) {
+        const { DEMO_USERS } = await import('@/lib/authData');
+        const fallbackDemo = DEMO_USERS.find(u => u.email.toLowerCase() === normalizedEmail);
+        if (fallbackDemo) {
+          targetId = fallbackDemo.id;
+          targetRole = fallbackDemo.role;
+          targetName = `${fallbackDemo.firstName} ${fallbackDemo.lastName}`;
+
+          const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+          const payload = btoa(
+            JSON.stringify({
+              sub: fallbackDemo.id,
+              email: normalizedEmail,
+              name: targetName,
+              role: fallbackDemo.role,
+              iat: Math.floor(Date.now() / 1000),
+              exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+            })
+          );
+          const mockToken = `${header}.${payload}.mock_signature_${fallbackDemo.id}`;
+
+          const { password: _, ...cleanUser } = fallbackDemo;
+          return NextResponse.json({
+            success: true,
+            user: cleanUser,
+            token: mockToken,
+          });
+        }
+
         return NextResponse.json(
-          { success: false, error: 'Demo user not found in database.' },
+          { success: false, error: 'Demo user account not found.' },
           { status: 404 }
         );
       }
       
-      finalUserId = demoUser.id;
-      // Generate a simple mock JWT so tokenParser.ts can read it
+      finalUserId = targetId!;
       const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
       const payload = btoa(
         JSON.stringify({
-          sub: demoUser.id,
+          sub: targetId,
           email: normalizedEmail,
-          name: `${demoUser.first_name} ${demoUser.last_name}`,
-          role: demoUser.role,
+          name: targetName,
+          role: targetRole,
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
         })
       );
-      finalToken = `${header}.${payload}.mock_signature_${demoUser.id}`;
+      finalToken = `${header}.${payload}.mock_signature_${targetId}`;
       
     } else {
       // STANDARD SUPABASE AUTH

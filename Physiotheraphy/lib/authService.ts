@@ -59,7 +59,7 @@ export async function authenticateUser(input: LoginInput): Promise<AuthResult> {
       }
     } else {
       const errData = await res.json().catch(() => ({}));
-      if (errData.error) {
+      if (errData.error && res.status !== 404) {
         return { success: false, error: errData.error };
       }
     }

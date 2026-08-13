@@ -98,20 +98,34 @@ export const useBookingStore = create<BookingState>()(
         const refNum = Math.floor(10000 + Math.random() * 90000);
 
         try {
+          const specObj = SPECIALISTS.find(s => s.id === state.specialistId);
+          const treatObj = TREATMENTS.find(t => t.id === state.treatmentId);
+          const clinicObj = CLINIC_BRANCHES.find(c => c.id === state.clinicId);
+
           const appointmentData = {
             id: `apt-${Date.now()}`,
             booking_ref: `HM-2026-${refNum}`,
             patient_id: patientUser.id,
+            patient_name: `${patientUser.firstName} ${patientUser.lastName}`,
+            patient_email: patientUser.email,
+            patient_phone: patientUser.phone || '',
             specialist_id: state.specialistId,
+            specialist_name: specObj?.name || 'Dr. Sarah Jenkins',
+            specialist_title: specObj?.title || 'Chief of Physiotherapy',
+            specialist_image: specObj?.image || '',
             treatment_id: state.treatmentId,
+            treatment_name: treatObj?.name || 'Physiotherapy Consultation',
+            treatment_category: treatObj?.tags?.[0] || 'Physical Rehabilitation',
             clinic_id: state.clinicId,
+            clinic_name: clinicObj?.name || 'Healing Motion Centre',
+            clinic_address: clinicObj?.address || 'Main Clinic Centre',
             date: state.date,
             time_slot: state.timeSlot,
             pain_level: state.painLevel,
-            pain_area: state.reasonForVisit,
-            medical_notes: state.notes,
+            pain_area: state.reasonForVisit || 'General Pain Assessment',
+            medical_notes: state.notes || '',
             total_amount: totalAmount,
-            status: 'confirmed'
+            status: 'pending'
           };
 
           // Use the appointment service which also ensures a patient_treatment link

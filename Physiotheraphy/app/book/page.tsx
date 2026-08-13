@@ -34,12 +34,22 @@ export default function BookingWizard() {
   const { currentStep, prevStep, setStep, resetBooking } = useBookingStore();
   const [mounted, setMounted] = useState(false);
 
+  const isInitialMount = React.useRef(true);
+
   useEffect(() => {
     setMounted(true);
     if (user?.role === 'therapist' || user?.role === 'doctor') {
       router.push('/therapist');
+      return;
     }
-  }, [user, router]);
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (currentStep === 8) {
+        resetBooking();
+      }
+    }
+  }, [user, router, currentStep, resetBooking]);
 
   if (!mounted) {
     return (

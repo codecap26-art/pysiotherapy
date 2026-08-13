@@ -8,7 +8,7 @@ import { formatPrice } from '@/lib/bookingData';
 import { getAuthHeaders } from '@/lib/authHeaders';
 import { 
   Calendar, Clock, MapPin, PlusCircle, RotateCcw, XCircle, 
-  CheckCircle2, AlertCircle, FileText, ChevronRight, X 
+  CheckCircle2, AlertCircle, FileText, ChevronRight, X, Trash2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -29,13 +29,18 @@ export default function PatientAppointmentsPage() {
       });
       if (res.ok) {
         const json = await res.json();
-        if (json.success && Array.isArray(json.appointments)) {
+        if (json.success && Array.isArray(json.appointments) && json.appointments.length > 0) {
           setAppointments(json.appointments);
+          return;
         }
       }
     } catch (err) {
       console.error('Failed to fetch appointments:', err);
     }
+    // Fallback to local DB persistent storage
+    const { db } = await import('@/lib/db');
+    const local = db.getAppointmentsByPatient(user.id);
+    setAppointments(local.length > 0 ? local : db.getAppointments());
   };
 
   useEffect(() => {
@@ -72,6 +77,22 @@ export default function PatientAppointmentsPage() {
     setSelectedForReschedule(null);
     refreshList();
     setActionSuccess('Appointment rescheduled successfully.');
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  const handleDeleteAppointment = async (id: string) => {
+    if (!confirm('Permanently delete this cancelled appointment record? This cannot be undone.')) return;
+    try {
+      await fetch(`/api/appointments?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+    } catch {}
+    // Also remove from local DB
+    const { db } = await import('@/lib/db');
+    db.deleteAppointment(id);
+    refreshList();
+    setActionSuccess('Appointment record deleted.');
     setTimeout(() => setActionSuccess(''), 4000);
   };
 
@@ -190,20 +211,28 @@ export default function PatientAppointmentsPage() {
                         ? 'bg-emerald-100 text-emerald-800'
                         : apt.status === 'cancelled'
                         ? 'bg-rose-100 text-rose-800'
-                        : apt.status === 'rescheduled'
-                        ? 'bg-amber-100 text-amber-800'
+                        : apt.status === 'confirmed'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : apt.status === 'pending'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-200'
                         : 'bg-blue-100 text-[#1E6FFF]'
                     }`}>
-                      {apt.status}
+                      {apt.status === 'pending' ? '⏳ PENDING DOCTOR APPROVAL' : apt.status === 'confirmed' ? '✓ CONFIRMED' : apt.status === 'cancelled' ? '✕ REJECTED / CANCELLED' : apt.status.toUpperCase()}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-[#0D1421]">{apt.treatmentName}</h3>
+                  <h3 className="text-base font-bold text-[#0D1421]">
+                    {apt.treatmentName || 'Physiotherapy & Rehabilitation Session'}
+                  </h3>
                   <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
-                    <span className="font-semibold text-[#0D1421]">Dr. {apt.specialistName?.replace('Dr. ', '')}</span>
+                    <span className="font-semibold text-[#0D1421]">
+                      {apt.specialistName
+                        ? (apt.specialistName.startsWith('Dr.') ? apt.specialistName : `Dr. ${apt.specialistName}`)
+                        : 'Dr. Sarah Jenkins'}
+                    </span>
                     <span>•</span>
                     <span className="truncate flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-[#10B981]" />
-                      {apt.clinicName}
+                      {apt.clinicName || 'Healing Motion Centre'}
                     </span>
                   </div>
                 </div>
@@ -237,6 +266,18 @@ export default function PatientAppointmentsPage() {
                         <XCircle className="w-4 h-4" />
                       </button>
                     </div>
+                  )}
+
+                  {apt.status === 'cancelled' && (
+                    <button
+                      type="button"
+                      title="Delete record"
+                      onClick={() => handleDeleteAppointment(apt.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
                   )}
                 </div>
               </motion.div>

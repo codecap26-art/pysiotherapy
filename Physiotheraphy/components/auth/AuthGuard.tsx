@@ -7,7 +7,7 @@ import { Loader2, ShieldAlert } from 'lucide-react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  allowedRoles?: ('patient' | 'therapist' | 'admin')[];
+  allowedRoles?: ('patient' | 'therapist' | 'admin' | 'doctor')[];
   redirectUrl?: string;
 }
 

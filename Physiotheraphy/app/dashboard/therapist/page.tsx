@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { DBAppointment, DBClinicalNote } from '@/lib/db';
 import { formatPrice } from '@/lib/bookingData';
@@ -48,9 +49,11 @@ export default function TherapistDashboardPage() {
     }
   };
 
+  const router = useRouter();
+
   useEffect(() => {
-    refreshAppointments();
-  }, [user]);
+    router.replace('/therapist');
+  }, [router]);
 
   const handleStatusChange = async (id: string, status: DBAppointment['status']) => {
     try {
@@ -285,6 +288,28 @@ export default function TherapistDashboardPage() {
                       <Activity className="w-3.5 h-3.5 text-[#1E6FFF]" />
                       <span>View Health Profile</span>
                     </button>
+
+                    {apt.status === 'pending' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(apt.id, 'confirmed')}
+                        className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Approve Booking</span>
+                      </button>
+                    )}
+
+                    {apt.status !== 'cancelled' && apt.status !== 'completed' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(apt.id, 'cancelled')}
+                        className="px-3 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold hover:bg-rose-100 transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Reject</span>
+                      </button>
+                    )}
 
                     {apt.status !== 'completed' && (
                       <button
