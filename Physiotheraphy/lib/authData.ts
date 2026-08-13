@@ -11,7 +11,7 @@ export interface User {
   age: number;
   gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   avatar: string;
-  role: 'patient' | 'therapist' | 'admin';
+  role: 'patient' | 'therapist' | 'admin' | 'doctor';
   emergencyContact: string;
   medicalConditions: string;
   allergies: string;
@@ -33,7 +33,7 @@ export interface RegisterInput {
   age: number;
   gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   password: string;
-  role?: 'patient' | 'therapist' | 'admin';
+  role?: 'patient' | 'therapist' | 'admin' | 'doctor';
 }
 
 export interface LoginInput {

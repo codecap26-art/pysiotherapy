@@ -89,14 +89,14 @@ export default function Navbar() {
         className={`
           fixed z-50 flex items-center
           transition-all duration-300
-          left-4 right-4 top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[95%] lg:w-[90%] md:max-w-6xl h-16 rounded-[20px]
+          left-4 right-4 top-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[95%] lg:w-[90%] md:max-w-6xl h-16 rounded-[24px]
           ${scrolled
             ? 'bg-white/90 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)]'
-            : 'bg-white/10 backdrop-blur-md border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
+            : 'bg-white/20 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)]'
           }
         `}
       >
-        <div className="w-full px-4 sm:px-5 lg:px-6 h-full flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 h-full flex items-center justify-between">
           {/* Logo — left corner */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0 outline-none">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#10B981] to-[#1E6FFF] flex items-center justify-center shadow-[0_2px_8px_rgba(30,111,255,0.4)]">
@@ -104,18 +104,18 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col leading-none">
               <span className={`text-sm font-black tracking-tight transition-colors ${
-                scrolled ? 'text-[#0D1421] group-hover:text-[#1E6FFF]' : 'text-white group-hover:text-white/80'
+                scrolled ? 'text-[#0D1421] group-hover:text-[#1E6FFF]' : 'text-white group-hover:text-white/90'
               }`}>
                 Healing Motion
               </span>
-              <span className={`text-[9px] font-semibold uppercase tracking-widest ${
+              <span className={`text-[9px] font-bold uppercase tracking-widest ${
                 scrolled ? 'text-[#10B981]' : 'text-emerald-300'
               }`}>Physiotherapy</span>
             </div>
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden lg:flex items-center gap-1.5">
+          <div className="hidden lg:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label }) => {
               const isActive = pathname === href;
               return (
@@ -123,12 +123,14 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   className={`
-                    px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-400
+                    px-4 py-1.5 rounded-full text-[13px] font-bold transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-400
                     ${isActive
-                      ? scrolled ? 'bg-[#EFF5FF] text-[#1E6FFF]' : 'bg-white/20 text-white'
+                      ? scrolled
+                        ? 'bg-[#EFF5FF] text-[#1E6FFF] shadow-xs'
+                        : 'bg-white/30 text-white border border-white/40 shadow-xs'
                       : scrolled
                         ? 'text-[#4A5568] hover:text-[#0D1421] hover:bg-slate-100/60'
-                        : 'text-white/85 hover:text-white hover:bg-white/10'
+                        : 'text-white/85 hover:text-white hover:bg-white/15'
                     }
                   `}
                 >
@@ -145,14 +147,16 @@ export default function Navbar() {
                 {/* Notification Bell */}
                 <Link
                   href="/dashboard/notifications"
-                  className={`relative p-2 rounded-xl transition-all ${
-                    scrolled ? 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0D1421]' : 'text-white/90 hover:bg-white/10 hover:text-white'
+                  className={`relative p-2 rounded-full transition-all ${
+                    scrolled
+                      ? 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0D1421]'
+                      : 'bg-white/15 text-white border border-white/20 hover:bg-white/25'
                   }`}
                   aria-label="Notifications"
                 >
-                  <Bell className="w-5 h-5" />
+                  <Bell className="w-4 h-4" />
                   {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center animate-pulse">
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center animate-pulse border-2 border-white">
                       {unreadCount}
                     </span>
                   )}
@@ -163,8 +167,10 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className={`flex items-center gap-2.5 p-1.5 pr-3 rounded-full transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-                      scrolled ? 'bg-white border border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:shadow-xs' : 'bg-white/10 border border-white/20 hover:bg-white/20'
+                    className={`flex items-center gap-2 p-1 pr-3 rounded-full transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                      scrolled 
+                        ? 'bg-white border border-[#E2E8F0] hover:border-[#1E6FFF]/50 hover:shadow-xs' 
+                        : 'bg-white/15 border border-white/25 hover:bg-white/25 backdrop-blur-md'
                     }`}
                   >
                     <div className="w-7 h-7 rounded-full bg-[#EFF5FF] border border-[#BFDBFE] flex items-center justify-center text-xs font-black text-[#1E6FFF] overflow-hidden shrink-0">
@@ -174,15 +180,15 @@ export default function Navbar() {
                         <span>{user.firstName?.[0] || 'U'}</span>
                       )}
                     </div>
-                    <div className="text-left leading-none max-w-[90px]">
-                      <div className={`text-xs font-bold truncate ${scrolled ? 'text-[#0D1421]' : 'text-white'}`}>
+                    <div className="text-left leading-none">
+                      <div className={`text-xs font-extrabold truncate max-w-[80px] ${scrolled ? 'text-[#0D1421]' : 'text-white'}`}>
                         {user.firstName}
                       </div>
-                      <div className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${scrolled ? 'text-[#1E6FFF]' : 'text-blue-200'}`}>
+                      <div className={`text-[8px] font-extrabold uppercase tracking-widest mt-0.5 ${scrolled ? 'text-[#1E6FFF]' : 'text-cyan-200'}`}>
                         {user.role}
                       </div>
                     </div>
-                    <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${scrolled ? 'text-[#8896A8]' : 'text-white/70'}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 shrink-0 ${scrolled ? 'text-[#8896A8]' : 'text-white/80'}`} />
                   </button>
 
                   {/* Dropdown Menu */}
